@@ -11,6 +11,8 @@ noticeably slow. Patches welcome!
 
 [[screencast.gif]]
 
+** A larger example
+
 [[screencast_l.gif]]
 
 ** Installation
