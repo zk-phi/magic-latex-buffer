@@ -11,6 +11,8 @@ noticeably slow. Patches welcome!
 
 [[screencast.gif]]
 
+[[screencast_l.gif]]
+
 ** Installation
 
 Put magic-latex-buffer.el into a "load-path"ed directory, and load it in your
