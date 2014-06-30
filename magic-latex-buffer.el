@@ -403,6 +403,24 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
 
 ;; + jit-lock highlighters
 
+
+(defconst ml/decoration-commands
+  '(("\\\\texttt\\>" . #("T" 0 1 (face ml/type)))
+    ("\\\\textmd\\>" . #("T" 0 1 (face ml/type)))
+    ("\\\\textrm\\>" . #("T" 0 1 (face ml/type)))
+    ("\\\\textsf\\>" . #("T" 0 1 (face ml/type)))
+    ("\\\\underline\\>" . #("U" 0 1 (face underline)))
+    ("\\\\overline\\>" . #("O" 0 1 (face ml/overline)))
+    ("\\\\textit\\>" . #("I" 0 1 (face italic)))
+    ("\\\\textsl\\>" . #("I" 0 1 (face italic)))
+    ("\\\\emph\\>" . #("I" 0 1 (face italic)))
+    ("\\\\textbf\\>" . #("B" 0 1 (face bold)))
+    ("\\\\textsc\\>" . #("B" 0 1 (face bold)))
+    ("\\\\textup\\>" . #("B" 0 1 (face bold)))
+    ("\\\\boldsymbol\\>" . #("B" 0 1 (face bold)))
+    ("\\\\pmb\\>" . #("B" 0 1 (face bold)))
+    ("\\\\bm\\>" . #("B" 0 1 (face bold)))))
+
 (defconst ml/relation-symbols
   '(
     ;; basic
@@ -547,6 +565,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                           (compose-string (concat "／" (cdr pattern)))))
                   (append ml/relation-symbols
                           ml/arrow-symbols))
+          ml/decoration-commands
           ml/relation-symbols
           ml/negrel-symbols
           ml/operator-symbols
