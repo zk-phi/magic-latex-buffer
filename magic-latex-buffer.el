@@ -69,17 +69,9 @@
 
 ;; * screenとかの枠？
 
-;; * 使い易いインターフェース
-;;
-;; - カテゴリをrelationで定義すると自動的に\not版が定義されるとか
-
 ;; * 集合 （mathbb） (insert (compose-chars ?Q '(cc cl -86 0) ?Q))
 
 ;; * ベクトルとかアクセント記号とか たぶんcomposeうまく使えばできる
-
-;; * {}を薄くする？ （{}_n C _rとかのために）
-
-;; * underline{foo} にアンダーライン
 
 ;; * point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 
@@ -163,7 +155,7 @@ correct inline-math recognition.")
     ("\\\\s\\(?:urd\\|qrt\\)\\>" . "√") ("\\\\partial\\>" . "∂")
     ("\\\\int\\>" . "∫") ("\\\\iint\\>" . "∬") ("\\\\iiint\\>" . "∭")
     ("\\\\oint\\>" . "∮")
-    ("\\\\varlimsup\\>" . #("lim" 0 3 (face phi-pretty-latex-overline)))
+    ("\\\\varlimsup\\>" . #("lim" 0 3 (face ml/overline)))
     ("\\\\varliminf\\>" . #("lim" 0 3 (face underline)))
     ;; computers
     ("\\\\react\\>" . ":-")
@@ -519,11 +511,14 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
               (,specials-2 . font-lock-warning-face)
               (,other-commands . font-lock-keyword-face)))))
 
-;; NOT equivalent of tex-font-lock-keywords-3
+;; NOT compatible with tex-font-lock-keywords
 (defconst ml/font-lock-keywords-3
   (append ml/font-lock-keywords-2
           (let ((chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
                 (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
+                (empty-block "{}")
+                (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
+                (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
                 (type
                  (ml/generate-command-matcher
                   (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
@@ -545,6 +540,9 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                   (ml/regexp-opt '("bf" "bfseries")))))
             `((,chapter 1 'ml/chapter t)
               (,section 1 'ml/section t)
+              (,empty-block . 'shadow)
+              (,underline 1 'underline)
+              (,overline 1 'ml/overline)
               (,type 1 'ml/type)
               (,tiny 1 'ml/tiny append)
               (,scriptsize 1 'ml/script append)
