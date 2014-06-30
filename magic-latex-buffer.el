@@ -555,9 +555,8 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\\\(?:double\\[\\|lBrack\\)" . #("[[" 0 2 (composition ((2 91 2523277 91)))))
     ("\\\\\\(?:double\\]\\|rBrack\\)" . #("]]" 0 2 (composition ((2 93 2523277 93)))))
     ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
-    ;; ;; "&"
-    ;; ("&" . #("&|" 0 2 (composition ((2)))))
-    ))
+    ;; "&"
+    ("&" . #("&|" 0 2 (composition ((2)) face shadow)))))
 
 (defconst ml/symbols
   (append (mapcar (lambda (pattern)
@@ -620,7 +619,7 @@ the command name."
   (save-excursion
     (while (ignore-errors (ml/search-suscript t end))
       (let ((ov1 (ml/make-overlay (match-beginning 0) (match-end 0)
-                                  'invisible t 'intangible (cl-gensym)))
+                                  'invisible t 'intangible t))
             (ov2 (ml/make-overlay (match-beginning 1) (match-end 1))))
         (cl-case (string-to-char (match-string 0))
           ((?_) (overlay-put ov2 'display '((raise -0.2) (height 0.8))))
@@ -635,8 +634,7 @@ the command name."
                          (throw 'found ov)))))
                (oldprop (and ov (overlay-get ov 'display))))
           (cond ((null ov)
-                 (ml/make-overlay (match-beginning 0) (match-end 0)
-                                  'display (cdr symbol)))
+                 (ml/make-overlay (match-beginning 0) (match-end 0) 'display (cdr symbol)))
                 ((stringp oldprop)
                  nil)
                 (t
