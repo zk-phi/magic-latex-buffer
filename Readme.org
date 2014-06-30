@@ -19,7 +19,7 @@ init file.
 : (require 'magic-latex-buffer)
 
 Then you can enable highlighting with =M-x magic-latex-buffer= in a
-latex-mode-buffer. If you may enable highlighting automatically, add
-to the mode hook.
+latex-mode-buffer. If you want to enable highlighting automatically,
+add the function to the mode hook.
 
 : (add-hook 'latex-mode-hook 'magic-latex-buffer)
