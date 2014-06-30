@@ -76,15 +76,6 @@
 ;; * point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 
 ;; + vars, consts
-;; ++ internal vars
-
-(defvar-local ml/jit-point nil
-  "save the point while font-locking")
-
-(defvar-local ml/buffer-fancy-p nil
-  "whether this latex buffer is fancy")
-
-;; ++ settings
 
 (defconst ml/syntax-table
   (let ((st (copy-syntax-table tex-mode-syntax-table)))
@@ -100,158 +91,11 @@ correct inline-math recognition.")
     tex-verbatim)
   "list of faces which magic-latex should ignore")
 
-;; ++ pretty symbols
+(defvar-local ml/jit-point nil
+  "save the point while font-locking")
 
-(defconst ml/relation-symbols
-  '(
-    ;; basic
-    ("\\\\eq\\>" . "＝") ("\\\\equiv\\>" . "≡")
-    ("\\\\approx\\>" . "≒") ("\\\\cong\\>" . "≅")
-    ("\\\\le\\>" . "≦") ("\\\\ge\\>" . "≧")
-    ("\\\\to\\>" . "→") ("\\\\mapsto\\>" . "↦")
-    ("\\\\propto\\>" . "∝")
-    ;; set
-    ("\\\\subseteq\\>" . "⊆") ("\\\\subset\\>" . "⊂")
-    ("\\\\supseteq\\>" . "⊇") ("\\\\supset\\>" . "⊃")
-    ("\\\\in\\>" . "∈") ("\\\\ni\\>" . "∋")
-    ("\\\\sqsubseteq\\>" . "⊑") ("\\\\sqsupseteq\\>" . "⊒")
-    ;; logic
-    ("\\\\models\\>" . "⊧") ("\\\\vdash\\>" . "⊢") ("\\\\dashv\\>" . "⊣")
-    ("\\\\rightarrow\\>" . "→") ("\\\\leftarrow\\>" . "←")
-    ("\\\\leftrightarrow\\>" . "↔") ("\\\\Leftarrow\\>" . "⇐")
-    ("\\\\Rightarrow\\>" . "⇒") ("\\\\Leftrightarrow\\>" . "⇔")
-    ;; geometry
-    ("\\\\parallel\\>" . "∥") ("\\\\perp\\>" . "⊥")
-    ))
-
-(defconst ml/negrel-symbols
-  '(
-    ("\\\\neq\\>" ;; (compose-chars ?／ ?＝)
-     . #("／＝" 0 2 (composition ((2)))))
-    ("\\\\notin\\>" . #("／∈" 0 2 (composition ((2)))))
-    ("\\\\notni\\>" . #("／∋" 0 2 (composition ((2)))))
-    ))
-
-(defconst ml/operator-symbols
-  '(
-    ;; set
-    ("\\\\mid\\>" . "｜") ("\\\\emptyset\\>" . "∅") ("\\\\\\(?:set\\)?minus\\>" . "＼")
-    ("\\\\\\(?:big\\)?cup\\>" . "∪") ("\\\\\\(?:big\\)cap\\>" . "∩")
-    ("\\\\sqcup\\>" . "⊔") ("\\\\sqcap\\>" . "⊓")
-    ;; logic
-    ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\neg\\>" . "￢")
-    ("\\\\land\\>" . "∧") ("\\\\lor\\>" . "∨")
-    ;; algebra
-    ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
-    ("\\\\\\(?:big\\)?wedge\\>" . "∧") ("\\\\\\(?:big\\)?vee\\>" . "∨")
-    ("\\\\prod\\>" . "∏") ("\\\\sum\\>" . "∑")
-    ("\\\\triangleleft\\>" . "◁") ("\\\\triangleright\\>" . "▷")
-    ("\\\\bigtriangleup\\>" . "△") ("\\\\bigtriangledown\\>" . "▽")
-    ("\\\\odot\\>" . "⊙") ("\\\\oslash\\>" . "⊘") ("\\\\otimes\\>" . "⊗")
-    ("\\\\ominus\\>" . "⊖") ("\\\\oplus\\>" . "⊕") ("\\\\ast\\>" . "∗")
-    ;; analysis
-    ("\\\\mp\\>" . "∓") ("\\\\pm\\>" . "±")
-    ("\\\\Re\\>" . "ℜ") ("\\\\Im\\>" . "ℑ") ("\\\\angle\\>" . "∠")
-    ("\\\\s\\(?:urd\\|qrt\\)\\>" . "√") ("\\\\partial\\>" . "∂")
-    ("\\\\int\\>" . "∫") ("\\\\iint\\>" . "∬") ("\\\\iiint\\>" . "∭")
-    ("\\\\oint\\>" . "∮")
-    ("\\\\varlimsup\\>" . #("lim" 0 3 (face ml/overline)))
-    ("\\\\varliminf\\>" . #("lim" 0 3 (face underline)))
-    ;; computers
-    ("\\\\react\\>" . ":-")
-    ))
-
-(defconst ml/arrow-symbols
-  '(
-    ;; harpoon
-    ("\\\\leftharpoonup\\>" . "↼") ("\\\\rightharpoonup\\>" . "⇀")
-    ("\\\\leftharpoondown\\>" . "↽") ("\\\\rightharpoondown\\>" . "⇁")
-    ("\\\\leftrightharpoons\\>" . "⇋") ("\\\\rightleftharpoons\\>" . "⇌")
-    ("\\\\upharpoonleft\\>" . "↿") ("\\\\upharpoonright\\>" . "↾")
-    ("\\\\downharpoonleft\\>" . "⇃") ("\\\\downharpoonright\\>" . "⇂")
-    ;; vertical
-    ("\\\\uparrow\\>" . "↑") ("\\\\downarrow\\>" . "↓") ("\\\\updownarrow\\>" . "↕")
-    ("\\\\upuparrows\\>" . "⇈") ("\\\\downdownarrows\\>" . "⇊")
-    ("\\\\Uparrow\\>" . "⇑") ("\\\\Downarrow\\>" . "⇓") ("\\\\Updownarrow\\>" . "⇕")
-    ;; others
-    ("\\\\hookleftarrow\\>" . "↩") ("\\\\hookrightarrow\\>" . "↪")
-    ("\\\\twoheadleftarrow\\>" . "↞") ("\\\\twoheadrightarrow\\>" . "↠")
-    ("\\\\looparrowleft\\>" . "↫") ("\\\\looparrowright\\>" . "↬")
-    ("\\\\rightsquigarrow\\>" . "⇝") ("\\\\leftrightsquigarrow\\>" . "↭")
-    ("\\\\leftleftarrows\\>" . "⇇") ("\\\\rightrightarrows\\>" . "⇉")
-    ("\\\\leftrightarrows\\>" . "⇆") ("\\\\rightleftarrows\\>" . "⇄")
-    ("\\\\Lleftarrow\\>" . "⇚") ("\\\\Rrightarrow\\>" . "⇛")
-    ))
-
-(defconst ml/letter-symbols
-  '(
-    ;; greek
-    ("\\\\Gamma\\>" . "Γ") ("\\\\Delta\\>" . "Δ") ("\\\\Theta\\>" . "Θ")
-    ("\\\\Lambda\\>" . "Λ") ("\\\\Xi\\>" . "Ξ") ("\\\\Pi\\>" . "Π")
-    ("\\\\Sigma\\>" . "Σ") ("\\\\Upsilon\\>" . "Υ") ("\\\\Phi\\>" . "Φ")
-    ("\\\\Psi\\>" . "Ψ") ("\\\\Omega\\>" . "Ω") ("\\\\alpha\\>" . "α")
-    ("\\\\beta\\>" . "β") ("\\\\gamma\\>" . "γ") ("\\\\delta\\>" . "δ")
-    ("\\\\epsilon\\>" . "ε") ("\\\\zeta\\>" . "ζ") ("\\\\eta\\>" . "η")
-    ("\\\\theta\\>" . "θ") ("\\\\iota\\>" . "ι") ("\\\\kappa\\>" . "κ")
-    ("\\\\lambda\\>" . "λ") ("\\\\mu\\>" . "μ") ("\\\\nu\\>" . "ν")
-    ("\\\\xi\\>" . "ξ") ("\\\\pi\\>" . "π") ("\\\\rho\\>" . "ρ")
-    ("\\\\sigma\\>" . "σ") ("\\\\tau\\>" . "τ") ("\\\\upsilon\\>" . "υ")
-    ("\\\\phi\\>" . "φ") ("\\\\chi\\>" . "χ") ("\\\\psi\\>" . "ψ")
-    ("\\\\omega\\>" . "ω")
-    ;; latin / accented
-    ("\\\\ss\\>" . "ß") ("\\\\aa\\>" . "å") ("\\\\AA\\>" . "Å")
-    ("\\\\ae\\>" . "æ") ("\\\\oe\\>" . "œ") ("\\\\AE\\>" . "Æ") ("\\\\OE\\>" . "Œ")
-    ("\\\\o\\>" . "ø") ("\\\\O\\>" . "Ø")
-    ;; math
-    ("\\\\aleph\\>" . "ℵ") ("\\\\bot\\>" . "⊥") ("\\\\top\\>" . "⊤")
-    ("\\\\therefore\\>" . "∴") ("\\\\because\\>" . "∵")
-    ("\\\\infty\\>" . "∞") ("\\\\nabla\\>" . "∇") ("\\\\triangle\\>" . "△")
-    ;; others
-    ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
-    ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
-    ("\\\\\\(?:text\\)?backslash\\>" . "＼") ("\\\\circ\\>" . "○")
-    ("\\\\star\\>" . "⋆") ("\\\\S\\>" . "§")
-    ("\\\\dagger\\>" . "†") ("\\\\ddag\\>" . "‡")
-    ))
-
-(defconst ml/other-symbols
-  '(
-    ;; TeX commands
-    ("\\\\begin\\>" . "▽") ("\\\\end\\>" . "△")
-    ("\\\\\\(bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
-    ("\\\\left\\>" . "¡") ("\\\\right\\>" . "!")
-    ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
-    ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
-    ("\\\\TeX\\>"
-     ;; (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X)
-     . #("TEX" 0 3 (composition ((3 84 7099277 69 7117965 88)))))
-    ("\\\\LaTeX\\>"
-     ;; (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
-     ;;                ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X)
-     . #("LATEX" 0 5 (composition ((5 76 4498317 65 7236749 84 7226509 69 7112077 88)))))
-    ;; parens
-    ("\\\\{" . #("{⎨" 0 2 (composition ((2)))))
-    ("\\\\}" . #("⎬}" 0 2 (composition ((2)))))
-    ;; (compose-chars ?\[ '(cr cl -90 0) ?\[)
-    ("\\\\\\(?:double\\[\\|lBrack\\)" . #("[[" 0 2 (composition ((2 91 2523277 91)))))
-    ("\\\\\\(?:double\\]\\|rBrack\\)" . #("]]" 0 2 (composition ((2 93 2523277 93)))))
-    ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
-    ;; ;; "&"
-    ;; ("&" . #("&|" 0 2 (composition ((2)))))
-    ))
-
-(defconst ml/symbols
-  (append (mapcar (lambda (pattern)
-                    (cons (concat "\\\\not[ \t\n]*" (car pattern))
-                          (compose-string (concat "／" (cdr pattern)))))
-                  (append ml/relation-symbols
-                          ml/arrow-symbols))
-          ml/relation-symbols
-          ml/negrel-symbols
-          ml/operator-symbols
-          ml/arrow-symbols
-          ml/letter-symbols
-          ml/other-symbols))
+(defvar-local ml/buffer-fancy-p nil
+  "whether this latex buffer is fancy")
 
 ;; + faces
 
@@ -558,6 +402,157 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
               (,type-old 1 'ml/type append)))))
 
 ;; + jit-lock highlighters
+
+(defconst ml/relation-symbols
+  '(
+    ;; basic
+    ("\\\\eq\\>" . "＝") ("\\\\equiv\\>" . "≡")
+    ("\\\\approx\\>" . "≒") ("\\\\cong\\>" . "≅")
+    ("\\\\le\\>" . "≦") ("\\\\ge\\>" . "≧")
+    ("\\\\to\\>" . "→") ("\\\\mapsto\\>" . "↦")
+    ("\\\\propto\\>" . "∝")
+    ;; set
+    ("\\\\subseteq\\>" . "⊆") ("\\\\subset\\>" . "⊂")
+    ("\\\\supseteq\\>" . "⊇") ("\\\\supset\\>" . "⊃")
+    ("\\\\in\\>" . "∈") ("\\\\ni\\>" . "∋")
+    ("\\\\sqsubseteq\\>" . "⊑") ("\\\\sqsupseteq\\>" . "⊒")
+    ;; logic
+    ("\\\\models\\>" . "⊧") ("\\\\vdash\\>" . "⊢") ("\\\\dashv\\>" . "⊣")
+    ("\\\\rightarrow\\>" . "→") ("\\\\leftarrow\\>" . "←")
+    ("\\\\leftrightarrow\\>" . "↔") ("\\\\Leftarrow\\>" . "⇐")
+    ("\\\\Rightarrow\\>" . "⇒") ("\\\\Leftrightarrow\\>" . "⇔")
+    ;; geometry
+    ("\\\\parallel\\>" . "∥") ("\\\\perp\\>" . "⊥")
+    ))
+
+(defconst ml/negrel-symbols
+  '(
+    ("\\\\neq\\>" ;; (compose-chars ?／ ?＝)
+     . #("／＝" 0 2 (composition ((2)))))
+    ("\\\\notin\\>" . #("／∈" 0 2 (composition ((2)))))
+    ("\\\\notni\\>" . #("／∋" 0 2 (composition ((2)))))
+    ))
+
+(defconst ml/operator-symbols
+  '(
+    ;; set
+    ("\\\\mid\\>" . "｜") ("\\\\emptyset\\>" . "∅") ("\\\\\\(?:set\\)?minus\\>" . "＼")
+    ("\\\\\\(?:big\\)?cup\\>" . "∪") ("\\\\\\(?:big\\)cap\\>" . "∩")
+    ("\\\\sqcup\\>" . "⊔") ("\\\\sqcap\\>" . "⊓")
+    ;; logic
+    ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\neg\\>" . "￢")
+    ("\\\\land\\>" . "∧") ("\\\\lor\\>" . "∨")
+    ;; algebra
+    ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
+    ("\\\\\\(?:big\\)?wedge\\>" . "∧") ("\\\\\\(?:big\\)?vee\\>" . "∨")
+    ("\\\\prod\\>" . "∏") ("\\\\sum\\>" . "∑")
+    ("\\\\triangleleft\\>" . "◁") ("\\\\triangleright\\>" . "▷")
+    ("\\\\bigtriangleup\\>" . "△") ("\\\\bigtriangledown\\>" . "▽")
+    ("\\\\odot\\>" . "⊙") ("\\\\oslash\\>" . "⊘") ("\\\\otimes\\>" . "⊗")
+    ("\\\\ominus\\>" . "⊖") ("\\\\oplus\\>" . "⊕") ("\\\\ast\\>" . "∗")
+    ;; analysis
+    ("\\\\mp\\>" . "∓") ("\\\\pm\\>" . "±")
+    ("\\\\Re\\>" . "ℜ") ("\\\\Im\\>" . "ℑ") ("\\\\angle\\>" . "∠")
+    ("\\\\s\\(?:urd\\|qrt\\)\\>" . "√") ("\\\\partial\\>" . "∂")
+    ("\\\\int\\>" . "∫") ("\\\\iint\\>" . "∬") ("\\\\iiint\\>" . "∭")
+    ("\\\\oint\\>" . "∮")
+    ("\\\\varlimsup\\>" . #("lim" 0 3 (face ml/overline)))
+    ("\\\\varliminf\\>" . #("lim" 0 3 (face underline)))
+    ;; computers
+    ("\\\\react\\>" . ":-")
+    ))
+
+(defconst ml/arrow-symbols
+  '(
+    ;; harpoon
+    ("\\\\leftharpoonup\\>" . "↼") ("\\\\rightharpoonup\\>" . "⇀")
+    ("\\\\leftharpoondown\\>" . "↽") ("\\\\rightharpoondown\\>" . "⇁")
+    ("\\\\leftrightharpoons\\>" . "⇋") ("\\\\rightleftharpoons\\>" . "⇌")
+    ("\\\\upharpoonleft\\>" . "↿") ("\\\\upharpoonright\\>" . "↾")
+    ("\\\\downharpoonleft\\>" . "⇃") ("\\\\downharpoonright\\>" . "⇂")
+    ;; vertical
+    ("\\\\uparrow\\>" . "↑") ("\\\\downarrow\\>" . "↓") ("\\\\updownarrow\\>" . "↕")
+    ("\\\\upuparrows\\>" . "⇈") ("\\\\downdownarrows\\>" . "⇊")
+    ("\\\\Uparrow\\>" . "⇑") ("\\\\Downarrow\\>" . "⇓") ("\\\\Updownarrow\\>" . "⇕")
+    ;; others
+    ("\\\\hookleftarrow\\>" . "↩") ("\\\\hookrightarrow\\>" . "↪")
+    ("\\\\twoheadleftarrow\\>" . "↞") ("\\\\twoheadrightarrow\\>" . "↠")
+    ("\\\\looparrowleft\\>" . "↫") ("\\\\looparrowright\\>" . "↬")
+    ("\\\\rightsquigarrow\\>" . "⇝") ("\\\\leftrightsquigarrow\\>" . "↭")
+    ("\\\\leftleftarrows\\>" . "⇇") ("\\\\rightrightarrows\\>" . "⇉")
+    ("\\\\leftrightarrows\\>" . "⇆") ("\\\\rightleftarrows\\>" . "⇄")
+    ("\\\\Lleftarrow\\>" . "⇚") ("\\\\Rrightarrow\\>" . "⇛")
+    ))
+
+(defconst ml/letter-symbols
+  '(
+    ;; greek
+    ("\\\\Gamma\\>" . "Γ") ("\\\\Delta\\>" . "Δ") ("\\\\Theta\\>" . "Θ")
+    ("\\\\Lambda\\>" . "Λ") ("\\\\Xi\\>" . "Ξ") ("\\\\Pi\\>" . "Π")
+    ("\\\\Sigma\\>" . "Σ") ("\\\\Upsilon\\>" . "Υ") ("\\\\Phi\\>" . "Φ")
+    ("\\\\Psi\\>" . "Ψ") ("\\\\Omega\\>" . "Ω") ("\\\\alpha\\>" . "α")
+    ("\\\\beta\\>" . "β") ("\\\\gamma\\>" . "γ") ("\\\\delta\\>" . "δ")
+    ("\\\\epsilon\\>" . "ε") ("\\\\zeta\\>" . "ζ") ("\\\\eta\\>" . "η")
+    ("\\\\theta\\>" . "θ") ("\\\\iota\\>" . "ι") ("\\\\kappa\\>" . "κ")
+    ("\\\\lambda\\>" . "λ") ("\\\\mu\\>" . "μ") ("\\\\nu\\>" . "ν")
+    ("\\\\xi\\>" . "ξ") ("\\\\pi\\>" . "π") ("\\\\rho\\>" . "ρ")
+    ("\\\\sigma\\>" . "σ") ("\\\\tau\\>" . "τ") ("\\\\upsilon\\>" . "υ")
+    ("\\\\phi\\>" . "φ") ("\\\\chi\\>" . "χ") ("\\\\psi\\>" . "ψ")
+    ("\\\\omega\\>" . "ω")
+    ;; latin / accented
+    ("\\\\ss\\>" . "ß") ("\\\\aa\\>" . "å") ("\\\\AA\\>" . "Å")
+    ("\\\\ae\\>" . "æ") ("\\\\oe\\>" . "œ") ("\\\\AE\\>" . "Æ") ("\\\\OE\\>" . "Œ")
+    ("\\\\o\\>" . "ø") ("\\\\O\\>" . "Ø")
+    ;; math
+    ("\\\\aleph\\>" . "ℵ") ("\\\\bot\\>" . "⊥") ("\\\\top\\>" . "⊤")
+    ("\\\\therefore\\>" . "∴") ("\\\\because\\>" . "∵")
+    ("\\\\infty\\>" . "∞") ("\\\\nabla\\>" . "∇") ("\\\\triangle\\>" . "△")
+    ;; others
+    ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
+    ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
+    ("\\\\\\(?:text\\)?backslash\\>" . "＼") ("\\\\circ\\>" . "○")
+    ("\\\\star\\>" . "⋆") ("\\\\S\\>" . "§")
+    ("\\\\dagger\\>" . "†") ("\\\\ddag\\>" . "‡")
+    ))
+
+(defconst ml/other-symbols
+  '(
+    ;; TeX commands
+    ("\\\\begin\\>" . "▽") ("\\\\end\\>" . "△")
+    ("\\\\\\(bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
+    ("\\\\left\\>" . "¡") ("\\\\right\\>" . "!")
+    ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
+    ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
+    ("\\\\TeX\\>"
+     ;; (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X)
+     . #("TEX" 0 3 (composition ((3 84 7099277 69 7117965 88)))))
+    ("\\\\LaTeX\\>"
+     ;; (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
+     ;;                ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X)
+     . #("LATEX" 0 5 (composition ((5 76 4498317 65 7236749 84 7226509 69 7112077 88)))))
+    ;; parens
+    ("\\\\{" . #("{⎨" 0 2 (composition ((2)))))
+    ("\\\\}" . #("⎬}" 0 2 (composition ((2)))))
+    ;; (compose-chars ?\[ '(cr cl -90 0) ?\[)
+    ("\\\\\\(?:double\\[\\|lBrack\\)" . #("[[" 0 2 (composition ((2 91 2523277 91)))))
+    ("\\\\\\(?:double\\]\\|rBrack\\)" . #("]]" 0 2 (composition ((2 93 2523277 93)))))
+    ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
+    ;; ;; "&"
+    ;; ("&" . #("&|" 0 2 (composition ((2)))))
+    ))
+
+(defconst ml/symbols
+  (append (mapcar (lambda (pattern)
+                    (cons (concat "\\\\not[ \t\n]*" (car pattern))
+                          (compose-string (concat "／" (cdr pattern)))))
+                  (append ml/relation-symbols
+                          ml/arrow-symbols))
+          ml/relation-symbols
+          ml/negrel-symbols
+          ml/operator-symbols
+          ml/arrow-symbols
+          ml/letter-symbols
+          ml/other-symbols))
 
 (defun ml/make-overlay (from to &rest props)
   (let* ((ov (make-overlay from to))
