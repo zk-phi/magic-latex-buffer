@@ -315,7 +315,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
           "^[ \t]*\\\\def *\\\\\\(\\(\\w\\|@\\)+\\)"))
     `((,headings 1 font-lock-function-name-face keep)
       (,variables 1 font-lock-variable-name-face)
-      (,includes 1 font-lock-builtin-face)
+      (,includes 1 font-lock-constant-face)
       (,verbish 1 'tex-verbatim)
       (,definitions 1 font-lock-function-name-face))))
 
@@ -360,7 +360,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
   (append ml/font-lock-keywords-2
           (let ((chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
                 (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
-                (empty-block "{}")
+                (diminish "{}\\|&")
                 (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
                 (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
                 (type
@@ -384,7 +384,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                   (ml/regexp-opt '("bf" "bfseries")))))
             `((,chapter 1 'ml/chapter t)
               (,section 1 'ml/section t)
-              (,empty-block . 'shadow)
+              (,diminish . 'shadow)
               (,underline 1 'underline)
               (,overline 1 'ml/overline)
               (,type 1 'ml/type)
@@ -402,7 +402,6 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
               (,type-old 1 'ml/type append)))))
 
 ;; + jit-lock highlighters
-
 
 (defconst ml/decoration-commands
   '(("\\\\texttt\\>" . #("T" 0 1 (face ml/type)))
@@ -538,6 +537,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ;; TeX commands
     ("\\\\begin\\>" . "▽") ("\\\\end\\>" . "△")
     ("\\\\\\(bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
+    ("\\\\ref\\>" . "☞") ("\\\\cite\\>" . "†")
     ("\\\\left\\>" . "¡") ("\\\\right\\>" . "!")
     ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
     ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
