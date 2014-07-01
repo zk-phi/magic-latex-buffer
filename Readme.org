@@ -4,8 +4,8 @@ magical syntax highlighting for LaTeX-mode buffers.
 
 LaTeX-mode のシンタックスハイライトを激しく
 
-NOTE: This is a WIP project. May contain some fatal bugs, and is
-noticeably slow. Patches welcome!
+*NOTE: This is a WIP project, may has some fatal bugs, and is
+noticeably slow. Patches welcome!*
 
 ** Screencast
 
@@ -14,6 +14,8 @@ noticeably slow. Patches welcome!
 ** A larger example
 
 [[screencast_l.gif]]
+
+magic-latex-buffer can make it readable a mess of commands.
 
 ** Installation
 
