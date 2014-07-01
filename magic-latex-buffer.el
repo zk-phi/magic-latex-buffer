@@ -217,8 +217,6 @@ examples:
            (t
             t)))))
 
-;; + font-lock-keywords
-
 (defun ml/read-args (&optional option args)
   "look at something like \"[OPT]{ARG0}...{ARGn}}\" and
 set (match-string k) to ARGk. this function does not moves the
@@ -237,6 +235,8 @@ point."
         (setq res (reverse res))
         (set-match-data res)
         res))))
+
+;; + keyword highlighting
 
 (defun ml/generate-command-matcher (name &optional option args point-safe)
   "generate a forward search command that matches something like
@@ -257,35 +257,6 @@ be ARGk if succeeded."
   `(lambda (&optional limit)
      (ignore-errors
        (ml/search-command ,name ,option ,args ,point-safe limit))))
-
-(defun ml/generate-block-matcher (name &optional option args point-safe)
-  "generate a forward search command that matches something like
-\"\\begin{env} \\NAME[OPT]{ARG1}...{ARGn} ... BODY
-... \\end{env}\" and moves the cursor just after the
-NAME. (match-string 0) will be NAME, (match-string 1) will be
-BODY, and (match-string (1+ k)) will be ARGk if succeeded."
-  (defun ml/search-block (regex &optional option args point-safe limit)
-    (ml/safe-excursion
-     (ml/search-regexp regex limit nil point-safe)
-     (let ((command-beg (match-beginning 0))
-           (command-end (match-end 0)))
-       (condition-case nil
-           (save-excursion
-             (let* ((res (ml/read-args option args))
-                    (content-beg (point))
-                    (content-end (condition-case nil
-                                     (progn (ml/skip-blocks 1 t) (point))
-                                   (error (1- (buffer-size))))))
-               (setq res (cons command-beg
-                               (cons command-end
-                                     (cons content-beg
-                                           (cons content-end res)))))
-               (set-match-data res)
-               res))
-         (error (ml/search-block regex option args point-safe limit))))))
-  `(lambda (&optional limit)
-     (ignore-errors
-       (ml/search-block ,name ,option ,args ,point-safe limit))))
 
 ;; equivalent of tex-font-lock-keywords-1
 (defconst ml/font-lock-keywords-1
@@ -369,43 +340,80 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                 (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
                 (type
                  (ml/generate-command-matcher
-                  (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
-                (tiny (ml/generate-block-matcher "\\\\tiny\\>"))
-                (scriptsize (ml/generate-block-matcher "\\\\scriptsize\\>"))
-                (footnotesize (ml/generate-block-matcher "\\\\footnotesize\\>"))
-                (small (ml/generate-block-matcher "\\\\small\\>"))
-                (large (ml/generate-block-matcher "\\\\large\\>"))
-                (Large (ml/generate-block-matcher "\\\\Large\\>"))
-                (LARGE (ml/generate-block-matcher "\\\\LARGE\\>"))
-                (huge (ml/generate-block-matcher "\\\\huge\\>"))
-                (Huge (ml/generate-block-matcher "\\\\Huge\\>"))
-                (type-old (ml/generate-block-matcher "\\\\tt\\>"))
-                (italic-old
-                 (ml/generate-block-matcher
-                  (ml/regexp-opt '("em" "it" "sl"))))
-                (bold-old
-                 (ml/generate-block-matcher
-                  (ml/regexp-opt '("bf" "bfseries")))))
+                  (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1)))
             `((,chapter 1 'ml/chapter t)
               (,section 1 'ml/section t)
               (,diminish . 'shadow)
               (,underline 1 'underline)
               (,overline 1 'ml/overline)
-              (,type 1 'ml/type)
-              (,tiny 1 'ml/tiny append)
-              (,scriptsize 1 'ml/script append)
-              (,footnotesize 1 'ml/footnote append)
-              (,small 1 'ml/small append)
-              (,large 1 'ml/large append)
-              (,Large 1 'ml/llarge append)
-              (,LARGE 1 'ml/xlarge append)
-              (,huge 1 'ml/huge append)
-              (,Huge 1 'ml/hhuge append)
-              (,italic-old 1 'italic append)
-              (,bold-old 1 'bold append)
-              (,type-old 1 'ml/type append)))))
+              (,type 1 'ml/type)))))
 
-;; + jit-lock highlighters
+;; + block highlighting
+
+(defun ml/generate-block-matcher (name &optional option args point-safe)
+  "generate a forward search command that matches something like
+\"\\begin{env} \\NAME[OPT]{ARG1}...{ARGn} ... BODY
+... \\end{env}\" and moves the cursor just after the
+NAME. (match-string 0) will be NAME, (match-string 1) will be
+BODY, and (match-string (1+ k)) will be ARGk if succeeded."
+  (defun ml/search-block (regex &optional option args point-safe limit)
+    (ml/safe-excursion
+     (ml/search-regexp regex limit nil point-safe)
+     (let ((command-beg (match-beginning 0))
+           (command-end (match-end 0)))
+       (condition-case nil
+           (save-excursion
+             (let* ((res (ml/read-args option args))
+                    (content-beg (point))
+                    (content-end (condition-case nil
+                                     (progn (ml/skip-blocks 1 t) (point))
+                                   (error (1- (buffer-size))))))
+               (setq res (cons command-beg
+                               (cons command-end
+                                     (cons content-beg
+                                           (cons content-end res)))))
+               (set-match-data res)
+               res))
+         (error (ml/search-block regex option args point-safe limit))))))
+  `(lambda (&optional limit)
+     (ignore-errors
+       (ml/search-block ,name ,option ,args ,point-safe limit))))
+
+(defconst ml/block-commands
+  `((,(ml/generate-block-matcher "\\\\tiny\\>" nil nil t) . ml/tiny)
+    (,(ml/generate-block-matcher "\\\\scriptsize\\>" nil nil t) . ml/script)
+    (,(ml/generate-block-matcher "\\\\footnotesize\\>" nil nil t) . ml/footnote)
+    (,(ml/generate-block-matcher "\\\\small\\>" nil nil t) . ml/small)
+    (,(ml/generate-block-matcher "\\\\large\\>" nil nil t) . ml/large)
+    (,(ml/generate-block-matcher "\\\\Large\\>" nil nil t) . ml/llarge)
+    (,(ml/generate-block-matcher "\\\\LARGE\\>" nil nil t) . ml/xlarge)
+    (,(ml/generate-block-matcher "\\\\huge\\>" nil nil t) . ml/huge)
+    (,(ml/generate-block-matcher "\\\\Huge\\>" nil nil t) . ml/hhuge)
+    (,(ml/generate-block-matcher "\\\\tt\\>" nil nil t) . ml/type)
+    (,(ml/generate-block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil t) . italic)
+    (,(ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil t) . bold))
+  "list of (MATCHER . FACE)")
+
+(defun ml/make-block-overlay (from to &rest props)
+  (let* ((ov (make-overlay from to))
+         (hooks (list `(lambda (&rest _) (delete-overlay ,ov)))))
+    (overlay-put ov 'category 'magic-latex-block)
+    (while props
+      (overlay-put ov (car props) (cadr props))
+      (setq props (cddr props)))
+    ov))
+
+(defun ml/jit-block-highlighter (beg end)
+  (goto-char beg)
+  (ignore-errors (while (ml/skip-blocks 1 nil t)))
+  (remove-overlays (point) end 'category 'magic-latex-block)
+  (dolist (command ml/block-commands)
+    (save-excursion
+      (while (funcall (car command) end)
+        (ml/make-block-overlay (match-beginning 1) (match-end 1)
+                               nil nil 'face (cdr command))))))
+
+;; + pretty symbol/suscript
 
 (defconst ml/decoration-commands
   '(("\\\\\\(?:text\\(?:md\\|rm\\|sf\\|tt\\)\\)\\>"
@@ -571,12 +579,13 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
           ml/letter-symbols
           ml/other-symbols))
 
-(defun ml/make-overlay (from to &rest props)
+(defun ml/make-pretty-overlay (from to &rest props)
   (let* ((ov (make-overlay from to))
          (hooks (list `(lambda (&rest _) (delete-overlay ,ov)))))
+    (overlay-put ov 'category 'magic-latex-pretty)
+    (overlay-put ov 'intangible t)
     (overlay-put ov 'modification-hooks hooks)
     (overlay-put ov 'insert-in-front-hooks hooks)
-    (overlay-put ov 'category 'magic-latex)
     (while props
       (overlay-put ov (car props) (cadr props))
       (setq props (cddr props)))
@@ -608,18 +617,15 @@ the command name."
            res)
        (error (ml/search-suscript point-safe limit))))))
 
-(defun ml/jit-lock-highlighter (beg end)
-  (mapc (lambda (ov)
-          (when (eq (overlay-get ov 'category) 'magic-latex)
-            (delete-overlay ov)))
-        (overlays-in beg end))
+(defun ml/jit-prettifier (beg end)
   (goto-char beg)
+  (remove-overlays beg end 'category 'magic-latex-pretty)
   ;; prettify suscripts
   (save-excursion
     (while (ignore-errors (ml/search-suscript t end))
-      (let ((ov1 (ml/make-overlay (match-beginning 0) (match-end 0)
-                                  'invisible t 'intangible t))
-            (ov2 (ml/make-overlay (match-beginning 1) (match-end 1))))
+      (let ((ov1 (ml/make-pretty-overlay
+                  (match-beginning 0) (match-end 0) 'invisible t))
+            (ov2 (ml/make-pretty-overlay (match-beginning 1) (match-end 1))))
         (cl-case (string-to-char (match-string 0))
           ((?_) (overlay-put ov2 'display '((raise -0.2) (height 0.8))))
           ((?^) (overlay-put ov2 'display '((raise 0.2) (height 0.8))))))))
@@ -629,14 +635,15 @@ the command name."
       (while (ignore-errors (ml/search-regexp (car symbol) end nil t))
         (let* ((ov (catch 'found
                      (dolist (ov (overlays-at (match-beginning 0)))
-                       (when (eq (overlay-get ov 'category) 'magic-latex)
+                       (when (eq (overlay-get ov 'category) 'magic-latex-pretty)
                          (throw 'found ov)))))
                (oldprop (and ov (overlay-get ov 'display))))
-          (cond ((null ov)
-                 (ml/make-overlay (match-beginning 0) (match-end 0) 'display (cdr symbol)))
-                ((stringp oldprop)
+          (cond ((null oldprop)         ; we'd make a new overlay
+                 (ml/make-pretty-overlay
+                  (match-beginning 0) (match-end 0) 'display (cdr symbol)))
+                ((stringp oldprop)    ; already pretty (so do nothing)
                  nil)
-                (t
+                (t                   ; we'd reuse the existing overlay
                  (overlay-put ov 'display (propertize (cdr symbol) 'display oldprop)))))))))
 
 ;; + activate
@@ -648,25 +655,12 @@ the command name."
   (setq-local font-lock-multiline t)
   (set-syntax-table ml/syntax-table)
   (font-lock-add-keywords nil ml/font-lock-keywords-3 'set)
-  (jit-lock-register 'ml/jit-lock-highlighter t))
+  (jit-lock-register 'ml/jit-prettifier t)
+  (jit-lock-register 'ml/jit-block-highlighter))
 
 (defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
-  (if (not ml/buffer-fancy-p)
-      ad-do-it
-    (ad-set-arg 0 (condition-case nil
-                      (save-excursion
-                        (goto-char (ad-get-arg 0))
-                        (ml/skip-blocks 1 nil t)
-                        (point))
-                    (error 1)))
-    (ad-set-arg 1 (condition-case nil
-                      (save-excursion
-                        (goto-char (ad-get-arg 1))
-                        (ml/skip-blocks 1)
-                        (point))
-                    (error (1- (buffer-size)))))
-    (let ((ml/jit-point (point)))
-      ad-do-it)))
+  (let ((ml/jit-point (point)))
+    ad-do-it))
 
 (add-to-list 'tex-verbatim-environments "Verbatim")
 (add-to-list 'tex-verbatim-environments "lstlisting")
