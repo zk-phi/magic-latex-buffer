@@ -9,13 +9,17 @@ noticeably slow. Patches welcome!*
 
 ** Screencast
 
-[[screencast.gif]]
+[[imgs/screencast.gif]]
 
-** A larger example
+** Other examples
 
-[[screencast_l.gif]]
+- make it readable a mess of commands
 
-magic-latex-buffer can make it readable a mess of commands.
+  [[imgs/readability.gif]]
+
+- handle nested blocks correctly
+
+[[imgs/nested_blocks.gif]]
 
 ** Installation
 
