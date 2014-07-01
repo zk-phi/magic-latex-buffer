@@ -404,8 +404,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ov))
 
 (defun ml/jit-block-highlighter (beg end)
-  (goto-char beg)
-  (ignore-errors (while (ml/skip-blocks 1 nil t)))
+  (ignore-errors (ml/skip-blocks 1 t t)) ; should we (goto-char 1) ?
   (remove-overlays (point) end 'category 'magic-latex-block)
   (dolist (command ml/block-commands)
     (save-excursion
@@ -637,13 +636,10 @@ the command name."
                        (when (eq (overlay-get ov 'category) 'magic-latex-pretty)
                          (throw 'found ov)))))
                (oldprop (and ov (overlay-get ov 'display))))
-          (cond ((null oldprop)         ; we'd make a new overlay
-                 (ml/make-pretty-overlay
-                  (match-beginning 0) (match-end 0) 'display (cdr symbol) 'intangible t))
-                ((stringp oldprop)    ; already pretty (so do nothing)
-                 nil)
-                (t                   ; we'd reuse the existing overlay
-                 (overlay-put ov 'display (propertize (cdr symbol) 'display oldprop)))))))))
+          (unless (stringp oldprop)
+            (ml/make-pretty-overlay
+             (match-beginning 0) (match-end 0) 'priority 1
+             'display (propertize (cdr symbol) 'display oldprop))))))))
 
 ;; + activate
 
