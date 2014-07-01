@@ -583,7 +583,6 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
   (let* ((ov (make-overlay from to))
          (hooks (list `(lambda (&rest _) (delete-overlay ,ov)))))
     (overlay-put ov 'category 'magic-latex-pretty)
-    (overlay-put ov 'intangible t)
     (overlay-put ov 'modification-hooks hooks)
     (overlay-put ov 'insert-in-front-hooks hooks)
     (while props
@@ -624,7 +623,7 @@ the command name."
   (save-excursion
     (while (ignore-errors (ml/search-suscript t end))
       (let ((ov1 (ml/make-pretty-overlay
-                  (match-beginning 0) (match-end 0) 'invisible t))
+                  (match-beginning 0) (match-end 0) 'invisible t 'intangible t))
             (ov2 (ml/make-pretty-overlay (match-beginning 1) (match-end 1))))
         (cl-case (string-to-char (match-string 0))
           ((?_) (overlay-put ov2 'display '((raise -0.2) (height 0.8))))
@@ -640,7 +639,7 @@ the command name."
                (oldprop (and ov (overlay-get ov 'display))))
           (cond ((null oldprop)         ; we'd make a new overlay
                  (ml/make-pretty-overlay
-                  (match-beginning 0) (match-end 0) 'display (cdr symbol)))
+                  (match-beginning 0) (match-end 0) 'display (cdr symbol) 'intangible t))
                 ((stringp oldprop)    ; already pretty (so do nothing)
                  nil)
                 (t                   ; we'd reuse the existing overlay
