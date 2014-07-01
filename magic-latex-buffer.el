@@ -404,7 +404,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ov))
 
 (defun ml/jit-block-highlighter (beg end)
-  (ignore-errors (ml/skip-blocks 1 t t)) ; should we (goto-char 1) ?
+  (ignore-errors (ml/skip-blocks 1 t t))
   (remove-overlays (point) end 'category 'magic-latex-block)
   (dolist (command ml/block-commands)
     (save-excursion
