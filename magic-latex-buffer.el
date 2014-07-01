@@ -412,7 +412,10 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ov2))
 
 (defun ml/jit-block-highlighter (beg end)
-  (dolist (ov (overlays-in beg end))
+  (condition-case nil
+      (progn (ml/skip-blocks 1 nil t) (point))
+    (error (goto-char 1)))
+  (dolist (ov (overlays-in (point) end))
     (when (eq (overlay-get ov 'category) 'magic-latex-block)
       (delete-overlay (overlay-get ov 'partner))
       (delete-overlay ov)))
