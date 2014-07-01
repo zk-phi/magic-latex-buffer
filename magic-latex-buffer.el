@@ -75,10 +75,6 @@
 
 ;; * point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 
-;; * シンボルを intangible にしたいけどカーソルが動かなくなる \oint_C など
-
-;; * 同じシンボルを並べると合体しちゃう \epsilon\epsilon など
-
 ;; + vars, consts
 
 (defconst ml/syntax-table
@@ -652,7 +648,7 @@ the command name."
                (oldprop (and ov (overlay-get ov 'display))))
           (unless (stringp oldprop)
             (ml/make-pretty-overlay
-             (match-beginning 0) (match-end 0) 'priority 1
+             (match-beginning 0) (match-end 0) 'priority 1 'intangible t
              'display (propertize (cdr symbol) 'display oldprop))))))))
 
 ;; + activate
