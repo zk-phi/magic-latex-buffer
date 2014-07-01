@@ -239,20 +239,21 @@ point."
 \"\\NAME[OPT]{ARG1}...{ARGn}\" and moves the cursor just after
 the NAME. (match-string 0) will be NAME and (match-string k) will
 be ARGk if succeeded."
-  (defun ml/search-command (regex &optional option args point-safe limit)
-    (ml/safe-excursion
-     (ml/search-regexp regex limit nil point-safe)
-     (let ((beg (match-beginning 0))
-           (end (match-end 0)))
-       (condition-case nil
-           (save-excursion
-             (let ((res (cons beg (cons end (ml/read-args option args)))))
-               (set-match-data res)
-               res))
-         (error (ml/search-command regex option args point-safe limit))))))
   `(lambda (&optional limit)
      (ignore-errors
        (ml/search-command ,name ,option ,args ,point-safe limit))))
+
+(defun ml/search-command (regex &optional option args point-safe limit)
+  (ml/safe-excursion
+   (ml/search-regexp regex limit nil point-safe)
+   (let ((beg (match-beginning 0))
+         (end (match-end 0)))
+     (condition-case nil
+         (save-excursion
+           (let ((res (cons beg (cons end (ml/read-args option args)))))
+             (set-match-data res)
+             res))
+       (error (ml/search-command regex option args point-safe limit))))))
 
 ;; equivalent of tex-font-lock-keywords-1
 (defconst ml/font-lock-keywords-1
@@ -352,28 +353,29 @@ be ARGk if succeeded."
 ... \\end{env}\" and moves the cursor just after the
 NAME. (match-string 0) will be NAME, (match-string 1) will be
 BODY, and (match-string (1+ k)) will be ARGk if succeeded."
-  (defun ml/search-block (regex &optional option args point-safe limit)
-    (ml/safe-excursion
-     (ml/search-regexp regex limit nil point-safe)
-     (let ((command-beg (match-beginning 0))
-           (command-end (match-end 0)))
-       (condition-case nil
-           (save-excursion
-             (let* ((res (ml/read-args option args))
-                    (content-beg (point))
-                    (content-end (condition-case nil
-                                     (progn (ml/skip-blocks 1 t) (point))
-                                   (error (1+ (buffer-size))))))
-               (setq res (cons command-beg
-                               (cons command-end
-                                     (cons content-beg
-                                           (cons content-end res)))))
-               (set-match-data res)
-               res))
-         (error (ml/search-block regex option args point-safe limit))))))
   `(lambda (&optional limit)
      (ignore-errors
        (ml/search-block ,name ,option ,args ,point-safe limit))))
+
+(defun ml/search-block (regex &optional option args point-safe limit)
+  (ml/safe-excursion
+   (ml/search-regexp regex limit nil point-safe)
+   (let ((command-beg (match-beginning 0))
+         (command-end (match-end 0)))
+     (condition-case nil
+         (save-excursion
+           (let* ((res (ml/read-args option args))
+                  (content-beg (point))
+                  (content-end (condition-case nil
+                                   (progn (ml/skip-blocks 1 t) (point))
+                                 (error (1+ (buffer-size))))))
+             (setq res (cons command-beg
+                             (cons command-end
+                                   (cons content-beg
+                                         (cons content-end res)))))
+             (set-match-data res)
+             res))
+       (error (ml/search-block regex option args point-safe limit))))))
 
 (defconst ml/block-commands
   `((,(ml/generate-block-matcher "\\\\tiny\\>" nil nil t) . ml/tiny)
@@ -660,7 +662,7 @@ the command name."
   (setq-local font-lock-multiline t)
   (set-syntax-table ml/syntax-table)
   (font-lock-add-keywords nil ml/font-lock-keywords-3 'set)
-  (jit-lock-register 'ml/jit-prettifier t)
+  (jit-lock-register 'ml/jit-prettifier)
   (jit-lock-register 'ml/jit-block-highlighter))
 
 (defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
