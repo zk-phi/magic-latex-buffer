@@ -394,23 +394,34 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     (,(ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil t) . bold))
   "list of (MATCHER . FACE)")
 
-(defun ml/make-block-overlay (from to &rest props)
-  (let* ((ov (make-overlay from to))
-         (hooks (list `(lambda (&rest _) (delete-overlay ,ov)))))
-    (overlay-put ov 'category 'magic-latex-block)
+(defun ml/make-block-overlay (com-from com-to hlt-from hlt-to &rest props)
+  (let* ((ov1 (make-overlay com-from com-to))
+         (ov2 (make-overlay hlt-from hlt-to))
+         (hooks (list (lambda (ov goahead from to &optional len)
+                        (when goahead
+                          (move-overlay ov
+                                        (min from (overlay-start ov))
+                                        (max to (overlay-end ov))))))))
+    (overlay-put ov1 'category 'magic-latex-block)
+    (overlay-put ov1 'partner ov2)
+    (overlay-put ov2 'insert-in-front-hooks hooks)
+    (overlay-put ov2 'insert-behind-hooks hooks)
     (while props
-      (overlay-put ov (car props) (cadr props))
+      (overlay-put ov2 (car props) (cadr props))
       (setq props (cddr props)))
-    ov))
+    ov2))
 
 (defun ml/jit-block-highlighter (beg end)
-  (ignore-errors (ml/skip-blocks 1 t t))
-  (remove-overlays (point) end 'category 'magic-latex-block)
+  (dolist (ov (overlays-in beg end))
+    (when (eq (overlay-get ov 'category) 'magic-latex-block)
+      (delete-overlay (overlay-get ov 'partner))
+      (delete-overlay ov)))
   (dolist (command ml/block-commands)
     (save-excursion
       (while (funcall (car command) end)
-        (ml/make-block-overlay (match-beginning 1) (match-end 1)
-                               nil nil 'face (cdr command))))))
+        (ml/make-block-overlay (match-beginning 0) (match-end 0)
+                               (match-beginning 1) (match-end 1)
+                               'face (cdr command))))))
 
 ;; + pretty symbol/suscript
 
