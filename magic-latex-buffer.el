@@ -367,7 +367,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                     (content-beg (point))
                     (content-end (condition-case nil
                                      (progn (ml/skip-blocks 1 t) (point))
-                                   (error (1- (buffer-size))))))
+                                   (error (1+ (buffer-size))))))
                (setq res (cons command-beg
                                (cons command-end
                                      (cons content-beg
