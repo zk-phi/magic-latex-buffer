@@ -19,7 +19,9 @@ noticeably slow. Patches welcome!*
 
 - handle nested blocks correctly
 
-[[imgs/nested_blocks.gif]]
+  [[imgs/nested_blocks.gif]]
+
+- fix inline-math highlighting for documents with multi-byte characters
 
 ** Installation
 
