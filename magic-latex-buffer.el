@@ -75,6 +75,10 @@
 
 ;; * point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 
+;; * シンボルを intangible にしたいけどカーソルが動かなくなる \oint_C など
+
+;; * 同じシンボルを並べると合体しちゃう \epsilon\epsilon など
+
 ;; + vars, consts
 
 (defconst ml/syntax-table
@@ -404,21 +408,16 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
 ;; + jit-lock highlighters
 
 (defconst ml/decoration-commands
-  '(("\\\\texttt\\>" . #("T" 0 1 (face ml/type)))
-    ("\\\\textmd\\>" . #("T" 0 1 (face ml/type)))
-    ("\\\\textrm\\>" . #("T" 0 1 (face ml/type)))
-    ("\\\\textsf\\>" . #("T" 0 1 (face ml/type)))
-    ("\\\\underline\\>" . #("U" 0 1 (face underline)))
-    ("\\\\overline\\>" . #("O" 0 1 (face ml/overline)))
-    ("\\\\textit\\>" . #("I" 0 1 (face italic)))
-    ("\\\\textsl\\>" . #("I" 0 1 (face italic)))
-    ("\\\\emph\\>" . #("I" 0 1 (face italic)))
-    ("\\\\textbf\\>" . #("B" 0 1 (face bold)))
-    ("\\\\textsc\\>" . #("B" 0 1 (face bold)))
-    ("\\\\textup\\>" . #("B" 0 1 (face bold)))
-    ("\\\\boldsymbol\\>" . #("B" 0 1 (face bold)))
-    ("\\\\pmb\\>" . #("B" 0 1 (face bold)))
-    ("\\\\bm\\>" . #("B" 0 1 (face bold)))))
+  '(("\\\\\\(?:text\\(?:md\\|rm\\|sf\\|tt\\)\\)\\>"
+     . #("T" 0 1 (face ml/type)))
+    ("\\\\\\(?:emph\\|text\\(?:it\\|sl\\)\\)\\>"
+     . #("I" 0 1 (face italic)))
+    ("\\\\\\(?:b\\(?:m\\|oldsymbol\\)\\|pmb\\|text\\(?:bf\\|sc\\|up\\)\\)\\>"
+     . #("B" 0 1 (face bold)))
+    ("\\\\underline\\>"
+     . #("U" 0 1 (face underline)))
+    ("\\\\overline\\>"
+     . #("O" 0 1 (face ml/overline)))))
 
 (defconst ml/relation-symbols
   '(
@@ -665,11 +664,12 @@ the command name."
                         (goto-char (ad-get-arg 1))
                         (ml/skip-blocks 1)
                         (point))
-                    (error (point-max))))
+                    (error (1- (buffer-size)))))
     (let ((ml/jit-point (point)))
       ad-do-it)))
 
 (add-to-list 'tex-verbatim-environments "Verbatim")
+(add-to-list 'tex-verbatim-environments "lstlisting")
 
 ;; + provide
 
