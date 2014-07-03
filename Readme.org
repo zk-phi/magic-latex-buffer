@@ -23,6 +23,10 @@ noticeably slow. Patches welcome!*
 
 - fix inline-math highlighting for documents with multi-byte characters
 
+- inline image preview powered by =iimage-mode=
+
+  [[./imgs/iimage.gif]]
+
 ** Installation
 
 Put magic-latex-buffer.el into a "load-path"ed directory, and load it in your
