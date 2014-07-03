@@ -76,7 +76,7 @@
 
 ;; +-+ screen, itembox, boxnote, shadeboxとかの枠？
 
-;; - page-break-lines みたいな水平線とか
+;; - page-break-lines みたいな水平線？
 
 ;; +-+ ベクトルとかアクセント記号 composeで作れる？
 ;; +-+ mathcalとか
@@ -500,29 +500,6 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\overline\\>"
      . #("O" 0 1 (face ml/overline)))))
 
-(defconst ml/mathbb-symbols
-  (mapcar (lambda (ch)
-            (cons (format "\\\\mathbb{%c}" ch)
-                  (compose-chars ch '(cc cl -86 0) ch)))
-          (string-to-list
-           "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")))
-
-(defconst ml/accent-symbols
-  (let ((lst nil))
-    (dolist (pair '(("vec" . ?→)
-                    ("hat" . ?^) ("^" . ?^)
-                    ("acute" . ?') ("'" . ?')
-                    ("grave" . ?`) ("`" . ?`)
-                    ("tilde" . ?~) ("~" . ?~)
-                    ("bar" . ?-) ("=" . ?-)
-                    ("dot" . ?・) ("\\." . ?○)
-                    ("\"" . ?\") ("H" . ?\") ("ddot" . ?\")))
-      (dolist (ch (string-to-list
-                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-        (push (cons (format "\\\\%s{%c}" (car pair) ch)
-                    (compose-chars ch '(cc Bc 0 50) (cdr pair))) lst)))
-    lst))
-
 (defconst ml/relation-symbols
   '(
     ;; basic
@@ -669,6 +646,26 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ;; "&"
     ("&" . #("&|" 0 2 (composition ((2)) face shadow)))))
 
+(defconst ml/accents
+  `(("\\\\\\(?:mathbb\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc cl -86 0) ch)))
+    ("\\\\\\(?:vec\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?→)))
+    ("\\\\\\(?:hat\\|\\^\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?^)))
+    ("\\\\\\(?:acute\\|'\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?')))
+    ("\\\\\\(?:grave\\|`\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?`)))
+    ("\\\\\\(?:tilde\\|~\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?~)))
+    ("\\\\\\(?:bar\\|=\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?-)))
+    ("\\\\\\(?:dot\\|\\.\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?・)))
+    ("\\\\\\(?:\"\\|H\\|ddot\\){\\([^}]\\)}"
+     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?\")))))
+
 (defconst ml/symbols
   (append (mapcar (lambda (pattern)
                     (cons (concat "\\\\not[ \t\n]*" (car pattern))
@@ -676,14 +673,13 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                   (append ml/relation-symbols
                           ml/arrow-symbols))
           ml/decoration-commands
-          ml/mathbb-symbols
-          ml/accent-symbols
           ml/relation-symbols
           ml/negrel-symbols
           ml/operator-symbols
           ml/arrow-symbols
           ml/letter-symbols
-          ml/other-symbols))
+          ml/other-symbols
+          ml/accents))
 
 (defun ml/make-pretty-overlay (from to &rest props)
   (let* ((ov (make-overlay from to))
@@ -745,11 +741,14 @@ the command name."
                      (dolist (ov (overlays-at (match-beginning 0)))
                        (when (eq (overlay-get ov 'category) 'magic-latex-pretty)
                          (throw 'found ov)))))
-               (oldprop (and ov (overlay-get ov 'display))))
+               (oldprop (and ov (overlay-get ov 'display)))
+               (dispstr (cdr symbol))
+               (dispstr (if (stringp dispstr) dispstr
+                          (funcall dispstr (match-string 1)))))
           (unless (stringp oldprop)
             (ml/make-pretty-overlay
              (match-beginning 0) (match-end 0) 'priority 1 'intangible t
-             'display (propertize (cdr symbol) 'display oldprop))))))))
+             'display (propertize dispstr 'display oldprop))))))))
 
 ;; + activate
 
