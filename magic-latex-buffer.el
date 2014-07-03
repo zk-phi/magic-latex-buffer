@@ -73,7 +73,7 @@
 
 ;; - begin~endとかのカタマリは全体でセンタリング
 
-;; +-+ screenとかの枠？
+;; +-+ screen, itembox, boxnote, shadeboxとかの枠？
 
 ;; - page-break-lines みたいな水平線とか
 
@@ -466,10 +466,14 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
 
 (defconst ml/accent-symbols
   (let ((lst nil))
-    (dolist (pair '(("vec" . ?→) ("hat" . ?^)
-                    ("acute" . ?') ("grave" . ?`)
-                    ("tilde" . ?~) ("bar" . ?-)
-                    ("dot" . ?・) ("ddot" . ?‥)))
+    (dolist (pair '(("vec" . ?→)
+                    ("hat" . ?^) ("^" . ?^)
+                    ("acute" . ?') ("'" . ?')
+                    ("grave" . ?`) ("`" . ?`)
+                    ("tilde" . ?~) ("~" . ?~)
+                    ("bar" . ?-) ("=" . ?-)
+                    ("dot" . ?・) ("\\." . ?○)
+                    ("\"" . ?\") ("H" . ?\") ("ddot" . ?\")))
       (dolist (ch (string-to-list
                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
         (push (cons (format "\\\\%s{%c}" (car pair) ch)
@@ -565,13 +569,14 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\Sigma\\>" . "Σ") ("\\\\Upsilon\\>" . "Υ") ("\\\\Phi\\>" . "Φ")
     ("\\\\Psi\\>" . "Ψ") ("\\\\Omega\\>" . "Ω") ("\\\\alpha\\>" . "α")
     ("\\\\beta\\>" . "β") ("\\\\gamma\\>" . "γ") ("\\\\delta\\>" . "δ")
-    ("\\\\epsilon\\>" . "ε") ("\\\\zeta\\>" . "ζ") ("\\\\eta\\>" . "η")
-    ("\\\\theta\\>" . "θ") ("\\\\iota\\>" . "ι") ("\\\\kappa\\>" . "κ")
-    ("\\\\lambda\\>" . "λ") ("\\\\mu\\>" . "μ") ("\\\\nu\\>" . "ν")
-    ("\\\\xi\\>" . "ξ") ("\\\\pi\\>" . "π") ("\\\\rho\\>" . "ρ")
-    ("\\\\sigma\\>" . "σ") ("\\\\tau\\>" . "τ") ("\\\\upsilon\\>" . "υ")
-    ("\\\\phi\\>" . "φ") ("\\\\chi\\>" . "χ") ("\\\\psi\\>" . "ψ")
-    ("\\\\omega\\>" . "ω")
+    ("\\\\\\(?:var\\)?epsilon\\>" . "ε") ("\\\\zeta\\>" . "ζ")
+    ("\\\\eta\\>" . "η") ("\\\\\\(?:var\\)?theta\\>" . "θ")
+    ("\\\\iota\\>" . "ι") ("\\\\kappa\\>" . "κ") ("\\\\lambda\\>" . "λ")
+    ("\\\\mu\\>" . "μ") ("\\\\nu\\>" . "ν") ("\\\\xi\\>" . "ξ")
+    ("\\\\\\(?:var\\)?pi\\>" . "π") ("\\\\\\(?:var\\)?rho\\>" . "ρ")
+    ("\\\\\\(?:var\\)?sigma\\>" . "σ") ("\\\\tau\\>" . "τ")
+    ("\\\\upsilon\\>" . "υ") ("\\\\\\(?:var\\)?phi\\>" . "φ")
+    ("\\\\chi\\>" . "χ") ("\\\\psi\\>" . "ψ") ("\\\\omega\\>" . "ω")
     ;; latin / accented
     ("\\\\ss\\>" . "ß") ("\\\\aa\\>" . "å") ("\\\\AA\\>" . "Å")
     ("\\\\ae\\>" . "æ") ("\\\\oe\\>" . "œ") ("\\\\AE\\>" . "Æ") ("\\\\OE\\>" . "Œ")
@@ -586,6 +591,9 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\\\(?:text\\)?backslash\\>" . "＼") ("\\\\circ\\>" . "○")
     ("\\\\star\\>" . "⋆") ("\\\\S\\>" . "§")
     ("\\\\dagger\\>" . "†") ("\\\\ddag\\>" . "‡")
+    ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
+    ("\\\\texttrademark\\>" . "™")
+    ("\\\\pounds\\>"  . "£") ("\\\\P\\>" . "¶")
     ))
 
 (defconst ml/other-symbols
@@ -613,6 +621,8 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\\\(?:double\\[\\|lBrack\\)" . #("[[" 0 2 (composition ((2 91 2523277 91)))))
     ("\\\\\\(?:double\\]\\|rBrack\\)" . #("]]" 0 2 (composition ((2 93 2523277 93)))))
     ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
+    ("\\\\lceil\\>" . "⌈") ("\\\\rceil\\>" . "⌉")
+    ("\\\\lfloor\\>" . "⌊") ("\\\\rfloor\\>" . "⌋")
     ;; "&"
     ("&" . #("&|" 0 2 (composition ((2)) face shadow)))))
 
