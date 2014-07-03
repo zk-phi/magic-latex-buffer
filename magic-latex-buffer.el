@@ -71,8 +71,6 @@
 
 ;; * screenとかの枠？
 
-;; * 集合 （mathbb） (insert (compose-chars ?Q '(cc cl -86 0) ?Q))
-
 ;; * ベクトルとかアクセント記号とか たぶんcomposeうまく使えばできる
 
 ;; * point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
@@ -440,6 +438,13 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\overline\\>"
      . #("O" 0 1 (face ml/overline)))))
 
+(defconst ml/mathbb-symbols
+  (mapcar (lambda (ch)
+            (cons (format "\\\\mathbb{%c}" ch)
+                  (compose-chars ch '(cc cl -86 0) ch)))
+          (string-to-list
+           "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")))
+
 (defconst ml/relation-symbols
   '(
     ;; basic
@@ -585,6 +590,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                   (append ml/relation-symbols
                           ml/arrow-symbols))
           ml/decoration-commands
+          ml/mathbb-symbols
           ml/relation-symbols
           ml/negrel-symbols
           ml/operator-symbols
