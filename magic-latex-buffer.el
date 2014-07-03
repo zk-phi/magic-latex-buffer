@@ -718,7 +718,10 @@ the command name."
   (set-syntax-table ml/syntax-table)
   (font-lock-add-keywords nil ml/font-lock-keywords-3 'set)
   (jit-lock-register 'ml/jit-prettifier)
-  (jit-lock-register 'ml/jit-block-highlighter))
+  (jit-lock-register 'ml/jit-block-highlighter)
+  (set (make-local-variable 'iimage-mode-image-regex-alist)
+       '(("\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*{\\([^}]*\\)}" . 1)))
+  (iimage-mode 1))
 
 (defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
   (let ((ml/jit-point (point)))
