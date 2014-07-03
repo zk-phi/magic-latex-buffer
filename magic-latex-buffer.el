@@ -119,6 +119,8 @@ correct inline-math recognition.")
                     :inherit font-lock-function-name-face
                     :height 1.6)
 
+(make-face 'ml/box)
+(set-face-attribute 'ml/box nil :box t)
 (make-face 'ml/overline)
 (set-face-attribute 'ml/overline nil :overline t)
 (make-face 'ml/type)
@@ -348,14 +350,19 @@ be ARGk if succeeded."
                 (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
                 (type
                  (ml/generate-command-matcher
-                  (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1)))
+                  (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
+                (box
+                 (ml/generate-command-matcher
+                  (ml/regexp-opt
+                   '("ovalbox" "Ovalbox" "fbox" "doublebox" "shadowbox")) nil 1)))
             `((,title 1 'ml/title t)
               (,chapter 1 'ml/chapter t)
               (,section 1 'ml/section t)
               (,diminish . 'shadow)
               (,underline 1 'underline)
               (,overline 1 'ml/overline)
-              (,type 1 'ml/type)))))
+              (,type 1 'ml/type)
+              (,box 1 'ml/box)))))
 
 ;; + block highlighting
 
