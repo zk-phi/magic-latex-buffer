@@ -47,8 +47,14 @@
 (require 'cl-lib)
 
 ;; + development notes
+;; +-+ アライン
 
-;; * センタリング
+;; - flushright/left, center, centering
+
+;; - quote, quotation (左に線を出す？)
+
+;; - センタリング
+;; -- 右揃えなら (- right (,width))
 ;;
 ;; (defun test ()
 ;;   (interactive)
@@ -64,17 +70,16 @@
 ;;         (overlay-put ov 'before-string
 ;;                      (propertize " " 'display
 ;;                                  `((space :align-to (- center (,(/ width 2)))))))))))
-;;
-;; - 右揃えなら (- right (,width))
-;;
+
 ;; - begin~endとかのカタマリは全体でセンタリング
 
-;; * screenとかの枠？
+;; +-+ screenとかの枠？
 
-;; * ベクトルとかアクセント記号とか たぶんcomposeうまく使えばできる
+;; - page-break-lines みたいな水平線とか
 
-;; * point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
-
+;; +-+ ベクトルとかアクセント記号 composeで作れる？
+;; +-+ mathcalとか
+;; +-+ point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 ;; + vars, consts
 
 (defconst ml/syntax-table
@@ -98,6 +103,11 @@ correct inline-math recognition.")
   "whether this latex buffer is fancy")
 
 ;; + faces
+
+(make-face 'ml/title)
+(set-face-attribute 'ml/title nil
+                    :inherit font-lock-function-name-face
+                    :height 2.0)
 
 (make-face 'ml/chapter)
 (set-face-attribute 'ml/chapter nil
@@ -330,7 +340,8 @@ be ARGk if succeeded."
 ;; NOT compatible with tex-font-lock-keywords
 (defconst ml/font-lock-keywords-3
   (append ml/font-lock-keywords-2
-          (let ((chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
+          (let ((title (ml/generate-command-matcher "\\\\title\\>" nil 1))
+                (chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
                 (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
                 (diminish "{}\\|&")
                 (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
@@ -338,7 +349,8 @@ be ARGk if succeeded."
                 (type
                  (ml/generate-command-matcher
                   (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1)))
-            `((,chapter 1 'ml/chapter t)
+            `((,title 1 'ml/title t)
+              (,chapter 1 'ml/chapter t)
               (,section 1 'ml/section t)
               (,diminish . 'shadow)
               (,underline 1 'underline)
@@ -438,12 +450,18 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\overline\\>"
      . #("O" 0 1 (face ml/overline)))))
 
-(defconst ml/mathbb-symbols
-  (mapcar (lambda (ch)
-            (cons (format "\\\\mathbb{%c}" ch)
-                  (compose-chars ch '(cc cl -86 0) ch)))
-          (string-to-list
-           "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")))
+(defconst ml/decorated-character-symbols
+  (nconc
+   (mapcar (lambda (ch)
+             (cons (format "\\\\mathbb{%c}" ch)
+                   (compose-chars ch '(cc cl -86 0) ch)))
+           (string-to-list
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+   (mapcar (lambda (ch)
+             (cons (format "\\\\vec{%c}" ch)
+                   (compose-chars ch '(cc Bc 0 0) ?→)))
+           (string-to-list
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))))
 
 (defconst ml/relation-symbols
   '(
@@ -482,7 +500,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\\\(?:big\\)?cup\\>" . "∪") ("\\\\\\(?:big\\)cap\\>" . "∩")
     ("\\\\sqcup\\>" . "⊔") ("\\\\sqcap\\>" . "⊓")
     ;; logic
-    ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\neg\\>" . "￢")
+    ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\\\(neg\\|lnot\\)\\>" . "￢")
     ("\\\\land\\>" . "∧") ("\\\\lor\\>" . "∨")
     ;; algebra
     ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
@@ -561,8 +579,9 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
   '(
     ;; TeX commands
     ("\\\\begin\\>" . "▽") ("\\\\end\\>" . "△")
-    ("\\\\\\(bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
+    ("\\\\\\(bib\\)?item\\>" . "・") ("\\\\par\\>" . "¶")
     ("\\\\ref\\>" . "☞") ("\\\\cite\\>" . "†")
+    ("\\\\footnote\\(?:mark\\)?\\>" . "＊")
     ("\\\\left\\>" . "¡") ("\\\\right\\>" . "!")
     ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
     ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
@@ -576,6 +595,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ;; parens
     ("\\\\{" . #("{⎨" 0 2 (composition ((2)))))
     ("\\\\}" . #("⎬}" 0 2 (composition ((2)))))
+    ("\\\\|" . "║")
     ;; (compose-chars ?\[ '(cr cl -90 0) ?\[)
     ("\\\\\\(?:double\\[\\|lBrack\\)" . #("[[" 0 2 (composition ((2 91 2523277 91)))))
     ("\\\\\\(?:double\\]\\|rBrack\\)" . #("]]" 0 2 (composition ((2 93 2523277 93)))))
@@ -590,7 +610,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                   (append ml/relation-symbols
                           ml/arrow-symbols))
           ml/decoration-commands
-          ml/mathbb-symbols
+          ml/decorated-character-symbols
           ml/relation-symbols
           ml/negrel-symbols
           ml/operator-symbols
