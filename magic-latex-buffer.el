@@ -450,18 +450,24 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ("\\\\overline\\>"
      . #("O" 0 1 (face ml/overline)))))
 
-(defconst ml/decorated-character-symbols
-  (nconc
-   (mapcar (lambda (ch)
-             (cons (format "\\\\mathbb{%c}" ch)
-                   (compose-chars ch '(cc cl -86 0) ch)))
-           (string-to-list
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-   (mapcar (lambda (ch)
-             (cons (format "\\\\vec{%c}" ch)
-                   (compose-chars ch '(cc Bc 0 0) ?→)))
-           (string-to-list
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))))
+(defconst ml/mathbb-symbols
+  (mapcar (lambda (ch)
+            (cons (format "\\\\mathbb{%c}" ch)
+                  (compose-chars ch '(cc cl -86 0) ch)))
+          (string-to-list
+           "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")))
+
+(defconst ml/accent-symbols
+  (let ((lst nil))
+    (dolist (pair '(("vec" . ?→) ("hat" . ?^)
+                    ("acute" . ?') ("grave" . ?`)
+                    ("tilde" . ?~) ("bar" . ?-)
+                    ("dot" . ?・) ("ddot" . ?‥)))
+      (dolist (ch (string-to-list
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+        (push (cons (format "\\\\%s{%c}" (car pair) ch)
+                    (compose-chars ch '(cc Bc 0 50) (cdr pair))) lst)))
+    lst))
 
 (defconst ml/relation-symbols
   '(
@@ -610,7 +616,8 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                   (append ml/relation-symbols
                           ml/arrow-symbols))
           ml/decoration-commands
-          ml/decorated-character-symbols
+          ml/mathbb-symbols
+          ml/accent-symbols
           ml/relation-symbols
           ml/negrel-symbols
           ml/operator-symbols
