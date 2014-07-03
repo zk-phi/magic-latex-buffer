@@ -44,6 +44,7 @@
 (require 'font-lock)
 (require 'jit-lock)
 (require 'tex-mode)
+(require 'iimage)
 (require 'cl-lib)
 
 ;; + development notes
