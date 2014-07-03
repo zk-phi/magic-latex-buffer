@@ -635,9 +635,12 @@ the command name."
   ;; prettify suscripts
   (save-excursion
     (while (ignore-errors (ml/search-suscript t end))
-      (let ((ov1 (ml/make-pretty-overlay
-                  (match-beginning 0) (match-end 0) 'invisible t 'intangible t))
-            (ov2 (ml/make-pretty-overlay (match-beginning 1) (match-end 1))))
+      (let* ((beg (match-beginning 1))
+             (end (match-end 1))
+             (ov1 (ml/make-pretty-overlay
+                   (match-beginning 0) (match-end 0) 'invisible t 'intangible t))
+             (ov2 (ml/make-pretty-overlay
+                   beg end 'intangible (if (= (- end beg) 1) t nil))))
         (cl-case (string-to-char (match-string 0))
           ((?_) (overlay-put ov2 'display '((raise -0.2) (height 0.8))))
           ((?^) (overlay-put ov2 'display '((raise 0.2) (height 0.8))))))))
