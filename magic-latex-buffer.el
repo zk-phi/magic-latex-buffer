@@ -289,7 +289,7 @@ be ARGk if succeeded."
              res))
        (error (ml/search-command regex option args point-safe limit))))))
 
-(defconst ml/font-lock-keywords-1
+(defconst ml/keywords-1
   (let ((headings
          (ml/generate-command-matcher
           (ml/regexp-opt
@@ -323,78 +323,79 @@ be ARGk if succeeded."
       (,includes 1 font-lock-constant-face)
       (,verbish 1 'tex-verbatim)
       (,definitions 1 font-lock-function-name-face)))
-  "magic-latex equivalent of `tex-font-lock-keywords-1'")
+  "highlighting keywords based on `tex-font-lock-keywords-1'")
 
-(defconst ml/font-lock-keywords-2
-  (append ml/font-lock-keywords-1
-          (let ((bold
-                 (ml/generate-command-matcher
-                  (ml/regexp-opt
-                   '("textbf" "textsc" "textup" "boldsymbol" "pmb" "bm")) nil 1))
-                (italic
-                 (ml/generate-command-matcher
-                  (ml/regexp-opt '("textit" "textsl" "emph")) nil 1))
-                (citations
-                 (ml/generate-command-matcher
-                  (ml/regexp-opt
-                   '("label" "ref" "pageref" "vref" "eqref" "cite"
-                     "nocite" "index" "glossary" "bibitem" "citep" "citet")) t 1))
-                (quotes
-                 (concat (regexp-opt `("``" "\"<" "\"`" "<<" "«") t)
-                         "[^'\">{]+" (regexp-opt `("''" "\">" "\"'" ">>" "»") t)))
-                (specials-1
-                 (ml/generate-command-matcher "\\\\\\(?:\\\\\\*?\\)" nil nil))
-                (specials-2
-                 (ml/generate-command-matcher
-                  (ml/regexp-opt
-                   '("linebreak" "nolinebreak" "pagebreak" "nopagebreak"
-                     "newline" "newpage" "clearpage" "cleardoublepage"
-                     "displaybreak" "allowdisplaybreaks" "enlargethispage")) nil nil))
-                (other-commands
-                 (ml/generate-command-matcher "\\\\\\(?:[a-zA-Z@]+\\**\\|[^ \t\n]\\)")))
-            `((,bold 1 'bold append)
-              (,italic 1 'italic append)
-              (,citations 1 font-lock-constant-face)
-              (,quotes . font-lock-string-face)
-              (,specials-1 . font-lock-warning-face)
-              (,specials-2 . font-lock-warning-face)
-              (,other-commands . font-lock-keyword-face))))
-  "magic-latex equivalent of `tex-font-lock-keywords-2'")
+(defconst ml/keywords-2
+  (let ((bold
+         (ml/generate-command-matcher
+          (ml/regexp-opt
+           '("textbf" "textsc" "textup" "boldsymbol" "pmb" "bm")) nil 1))
+        (italic
+         (ml/generate-command-matcher
+          (ml/regexp-opt '("textit" "textsl" "emph")) nil 1))
+        (citations
+         (ml/generate-command-matcher
+          (ml/regexp-opt
+           '("label" "ref" "pageref" "vref" "eqref" "cite"
+             "nocite" "index" "glossary" "bibitem" "citep" "citet")) t 1))
+        (quotes
+         (concat (regexp-opt `("``" "\"<" "\"`" "<<" "«") t)
+                 "[^'\">{]+" (regexp-opt `("''" "\">" "\"'" ">>" "»") t)))
+        (specials-1
+         (ml/generate-command-matcher "\\\\\\(?:\\\\\\*?\\)" nil nil))
+        (specials-2
+         (ml/generate-command-matcher
+          (ml/regexp-opt
+           '("linebreak" "nolinebreak" "pagebreak" "nopagebreak"
+             "newline" "newpage" "clearpage" "cleardoublepage"
+             "displaybreak" "allowdisplaybreaks" "enlargethispage")) nil nil))
+        (other-commands
+         (ml/generate-command-matcher "\\\\\\(?:[a-zA-Z@]+\\**\\|[^ \t\n]\\)")))
+    `((,bold 1 'bold append)
+      (,italic 1 'italic append)
+      (,citations 1 font-lock-constant-face)
+      (,quotes . font-lock-string-face)
+      (,specials-1 . font-lock-warning-face)
+      (,specials-2 . font-lock-warning-face)
+      (,other-commands . font-lock-keyword-face)))
+  "highlighting keywords based on `tex-font-lock-keywords-2'")
 
-(defconst ml/font-lock-keywords-3
-  (append ml/font-lock-keywords-2
-          (let ((title (ml/generate-command-matcher "\\\\title\\>" nil 1))
-                (chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
-                (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
-                (diminish "{}\\|&")
-                (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
-                (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
-                (color (ml/generate-command-matcher "\\\\textcolor\\>" nil 2))
-                (type
-                 (ml/generate-command-matcher
-                  (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
-                (box
-                 (ml/generate-command-matcher
-                  (ml/regexp-opt
-                   '("ovalbox" "Ovalbox" "fbox" "doublebox" "shadowbox")) nil 1)))
-            `((,title 1 'ml/title t)
-              (,chapter 1 'ml/chapter t)
-              (,section 1 'ml/section t)
-              (,diminish . 'shadow)
-              (,underline 1 'underline)
-              (,overline 1 'ml/overline)
-              (,color 2 (let ((str (match-string 1)))
-                          (cond ((string= str "black") 'ml/black)
-                                ((string= str "white") 'ml/white)
-                                ((string= str "red") 'ml/red)
-                                ((string= str "green") 'ml/green)
-                                ((string= str "blue") 'ml/blue)
-                                ((string= str "cyan") 'ml/cyan)
-                                ((string= str "magenta") 'ml/magenta)
-                                ((string= str "yellow") 'ml/yellow))))
-              (,type 1 'ml/type)
-              (,box 1 'ml/box))))
-  "extra keyword highlighting")
+(defconst ml/keywords-3
+  (let ((title (ml/generate-command-matcher "\\\\title\\>" nil 1))
+        (chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
+        (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
+        (diminish "{}\\|&")
+        (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
+        (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
+        (color (ml/generate-command-matcher "\\\\textcolor\\>" nil 2))
+        (type
+         (ml/generate-command-matcher
+          (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
+        (box
+         (ml/generate-command-matcher
+          (ml/regexp-opt
+           '("ovalbox" "Ovalbox" "fbox" "doublebox" "shadowbox")) nil 1)))
+    `((,title 1 'ml/title t)
+      (,chapter 1 'ml/chapter t)
+      (,section 1 'ml/section t)
+      (,diminish 0 'shadow t)
+      (,underline 1 'underline t)
+      (,overline 1 'ml/overline t)
+      (,color 2 (let ((str (match-string 1)))
+                  (cond ((string= str "black") 'ml/black)
+                        ((string= str "white") 'ml/white)
+                        ((string= str "red") 'ml/red)
+                        ((string= str "green") 'ml/green)
+                        ((string= str "blue") 'ml/blue)
+                        ((string= str "cyan") 'ml/cyan)
+                        ((string= str "magenta") 'ml/magenta)
+                        ((string= str "yellow") 'ml/yellow))) t)
+      (,type 1 'ml/type t)
+      (,box 1 'ml/box t)))
+  "extra highlighting keywords")
+
+(defconst ml/keywords
+  (append ml/keywords-1 ml/keywords-2 ml/keywords-3))
 
 ;; + block highlighting
 
@@ -429,28 +430,40 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
        (error (ml/search-block regex option args point-safe limit))))))
 
 (defconst ml/block-commands
-  `((,(ml/generate-block-matcher "\\\\tiny\\>" nil nil) . 'ml/tiny)
-    (,(ml/generate-block-matcher "\\\\scriptsize\\>" nil nil) . 'ml/script)
-    (,(ml/generate-block-matcher "\\\\footnotesize\\>" nil nil) . 'ml/footnote)
-    (,(ml/generate-block-matcher "\\\\small\\>" nil nil) . 'ml/small)
-    (,(ml/generate-block-matcher "\\\\large\\>" nil nil) . 'ml/large)
-    (,(ml/generate-block-matcher "\\\\Large\\>" nil nil) . 'ml/llarge)
-    (,(ml/generate-block-matcher "\\\\LARGE\\>" nil nil) . 'ml/xlarge)
-    (,(ml/generate-block-matcher "\\\\huge\\>" nil nil) . 'ml/huge)
-    (,(ml/generate-block-matcher "\\\\Huge\\>" nil nil) . 'ml/hhuge)
-    (,(ml/generate-block-matcher "\\\\tt\\>" nil nil) . 'ml/type)
-    (,(ml/generate-block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil) . 'italic)
-    (,(ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil) . 'bold)
-    (,(ml/generate-block-matcher "\\\\color" nil 1)
-     . (let ((col (match-string 2)))
-         (cond ((string= col "black") 'ml/black)
-               ((string= col "white") 'ml/white)
-               ((string= col "red") 'ml/red)
-               ((string= col "green") 'ml/green)
-               ((string= col "blue") 'ml/blue)
-               ((string= col "cyan") 'ml/cyan)
-               ((string= col "magenta") 'ml/magenta)
-               ((string= col "yellow") 'ml/yellow)))))
+  (let ((tiny (ml/generate-block-matcher "\\\\tiny\\>" nil nil))
+        (script (ml/generate-block-matcher "\\\\scriptsize\\>" nil nil))
+        (footnote (ml/generate-block-matcher "\\\\footnotesize\\>" nil nil))
+        (small (ml/generate-block-matcher "\\\\small\\>" nil nil))
+        (large (ml/generate-block-matcher "\\\\large\\>" nil nil))
+        (llarge (ml/generate-block-matcher "\\\\Large\\>" nil nil))
+        (xlarge (ml/generate-block-matcher "\\\\LARGE\\>" nil nil))
+        (huge (ml/generate-block-matcher "\\\\huge\\>" nil nil))
+        (hhuge (ml/generate-block-matcher "\\\\Huge\\>" nil nil))
+        (type (ml/generate-block-matcher "\\\\tt\\>" nil nil))
+        (italic (ml/generate-block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil))
+        (bold (ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil))
+        (color (ml/generate-block-matcher "\\\\color" nil 1)))
+    `((,tiny . 'ml/tiny)
+      (,script . 'ml/script)
+      (,footnote . 'ml/footnote)
+      (,small . 'ml/small)
+      (,large . 'ml/large)
+      (,llarge . 'ml/llarge)
+      (,xlarge . 'ml/xlarge)
+      (,huge . 'ml/huge)
+      (,hhuge . 'ml/hhuge)
+      (,type . 'ml/type)
+      (,italic . 'italic)
+      (,bold . 'bold)
+      (,color . (let ((col (match-string 2)))
+                  (cond ((string= col "black") 'ml/black)
+                        ((string= col "white") 'ml/white)
+                        ((string= col "red") 'ml/red)
+                        ((string= col "green") 'ml/green)
+                        ((string= col "blue") 'ml/blue)
+                        ((string= col "cyan") 'ml/cyan)
+                        ((string= col "magenta") 'ml/magenta)
+                        ((string= col "yellow") 'ml/yellow))))))
   "an alist of (MATCHER . FACE). MATCHER is a function that takes
 an argument, limit of the search, and does a forward search like
 `search-forward-regexp' then sets match-data properly. FACE is *a
@@ -494,15 +507,15 @@ propertized with the face.")
 
 (defconst ml/decoration-commands
   '(("\\\\\\(?:text\\(?:md\\|rm\\|sf\\|tt\\)\\)\\>"
-     . #("T" 0 1 (face ml/type)))
+     . (propertize "T" 'face 'ml/type))
     ("\\\\\\(?:emph\\|text\\(?:it\\|sl\\)\\)\\>"
-     . #("I" 0 1 (face italic)))
+     . (propertize "I" 'face 'italic))
     ("\\\\\\(?:b\\(?:m\\|oldsymbol\\)\\|pmb\\|text\\(?:bf\\|sc\\|up\\)\\)\\>"
-     . #("B" 0 1 (face bold)))
+     . (propertize "B" 'face 'bold))
     ("\\\\underline\\>"
-     . #("U" 0 1 (face underline)))
+     . (propertize "U" 'face 'underline))
     ("\\\\overline\\>"
-     . #("O" 0 1 (face ml/overline)))))
+     . (propertize "O" 'face 'ml/overline))))
 
 (defconst ml/relation-symbols
   '(
@@ -527,12 +540,9 @@ propertized with the face.")
     ))
 
 (defconst ml/negrel-symbols
-  '(
-    ("\\\\neq\\>" ;; (compose-chars ?／ ?＝)
-     . #("／＝" 0 2 (composition ((2)))))
-    ("\\\\notin\\>" . #("／∈" 0 2 (composition ((2)))))
-    ("\\\\notni\\>" . #("／∋" 0 2 (composition ((2)))))
-    ))
+  '(("\\\\neq\\>" . (compose-chars ?／ ?＝))
+    ("\\\\notin\\>" . (compose-chars ?／ ?∈))
+    ("\\\\notni\\>" . (compose-chars ?／ ?∋))))
 
 (defconst ml/operator-symbols
   '(
@@ -557,8 +567,8 @@ propertized with the face.")
     ("\\\\s\\(?:urd\\|qrt\\)\\>" . "√") ("\\\\partial\\>" . "∂")
     ("\\\\int\\>" . "∫") ("\\\\iint\\>" . "∬") ("\\\\iiint\\>" . "∭")
     ("\\\\oint\\>" . "∮")
-    ("\\\\varlimsup\\>" . #("lim" 0 3 (face ml/overline)))
-    ("\\\\varliminf\\>" . #("lim" 0 3 (face underline)))
+    ("\\\\varlimsup\\>" . (propertize "lim" 'face 'ml/overline))
+    ("\\\\varliminf\\>" . (propertize "lim" 'face 'underline))
     ;; computers
     ("\\\\react\\>" . ":-")
     ))
@@ -631,24 +641,23 @@ propertized with the face.")
     ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
     ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
     ("\\\\TeX\\>"
-     ;; (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X)
-     . #("TEX" 0 3 (composition ((3 84 7099277 69 7117965 88)))))
+     . (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X))
     ("\\\\LaTeX\\>"
-     ;; (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
-     ;;                ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X)
-     . #("LATEX" 0 5 (composition ((5 76 4498317 65 7236749 84 7226509 69 7112077 88)))))
+     . (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
+                      ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X))
     ;; parens
-    ("\\\\{" . #("{⎨" 0 2 (composition ((2)))))
-    ("\\\\}" . #("⎬}" 0 2 (composition ((2)))))
+    ("\\\\{" . (compose-chars ?\{ ?⎨))
+    ("\\\\}" . (compose-chars ?⎬ ?\}))
     ("\\\\|" . "║")
-    ;; (compose-chars ?\[ '(cr cl -90 0) ?\[)
-    ("\\\\\\(?:double\\[\\|lBrack\\)" . #("[[" 0 2 (composition ((2 91 2523277 91)))))
-    ("\\\\\\(?:double\\]\\|rBrack\\)" . #("]]" 0 2 (composition ((2 93 2523277 93)))))
+    ("\\\\\\(?:double\\[\\|lBrack\\)"
+     . (compose-chars ?\[ '(cr cl -90 0) ?\[))
+    ("\\\\\\(?:double\\]\\|rBrack\\)"
+     . (compose-chars ?\] '(cr cl -90 0) ?\]))
     ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
     ("\\\\lceil\\>" . "⌈") ("\\\\rceil\\>" . "⌉")
     ("\\\\lfloor\\>" . "⌊") ("\\\\rfloor\\>" . "⌋")
     ;; "&"
-    ("&" . #("&|" 0 2 (composition ((2)) face shadow)))))
+    ("&" . (compose-chars ?& ?|))))
 
 (defconst ml/accents
   `(("\\\\\\(?:mathbb\\){\\([^}]\\)}"
@@ -674,8 +683,7 @@ propertized with the face.")
   (append (mapcar (lambda (pattern)
                     (cons (concat "\\\\not[ \t\n]*" (car pattern))
                           (compose-string (concat "／" (cdr pattern)))))
-                  (append ml/relation-symbols
-                          ml/arrow-symbols))
+                  (append ml/relation-symbols ml/arrow-symbols))
           ml/decoration-commands
           ml/relation-symbols
           ml/negrel-symbols
@@ -760,7 +768,7 @@ the command name."
   (setq-local ml/buffer-fancy-p t)
   (setq-local font-lock-multiline t)
   (set-syntax-table ml/syntax-table)
-  (font-lock-add-keywords nil ml/font-lock-keywords-3 'set)
+  (font-lock-add-keywords nil ml/keywords 'set)
   (jit-lock-register 'ml/jit-prettifier)
   (jit-lock-register 'ml/jit-block-highlighter)
   (set (make-local-variable 'iimage-mode-image-regex-alist)
