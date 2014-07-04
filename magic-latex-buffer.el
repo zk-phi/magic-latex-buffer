@@ -245,25 +245,24 @@ examples:
             t)))))
 
 (defun ml/read-args (&optional option args)
-  "look at something like \"[OPT]{ARG0}...{ARGn}}\" and
+  "read something like \"[OPT]{ARG0}...{ARGn}}\" and
 set (match-string k) to ARGk. this function does not moves the
 point."
-  (save-excursion
-    (while (and option (looking-at " *\\["))
-      (ml/skip-blocks 0))
-    (when args
-      (let (res)
-        (dotimes (_ args)
-          (unless (looking-at " *{")
-            (error "too few arguments"))
-          (push (match-end 0) res)
-          (ml/skip-blocks 0 nil nil "\\({\\)\\|\\(}\\)")
-          (push (1- (point)) res))
-        (setq res (reverse res))
-        (set-match-data res)
-        res))))
+  (while (and option (looking-at " *\\["))
+    (ml/skip-blocks 0))
+  (when args
+    (let (res)
+      (dotimes (_ args)
+        (unless (looking-at " *{")
+          (error "too few arguments"))
+        (push (match-end 0) res)
+        (ml/skip-blocks 0 nil nil "\\({\\)\\|\\(}\\)")
+        (push (1- (point)) res))
+      (setq res (reverse res))
+      (set-match-data res)
+      res)))
 
-;; + keyword highlighting
+;; + keyword highlighting via font-lock
 
 (defun ml/generate-command-matcher (name &optional option args point-safe)
   "generate a forward search command that matches something like
@@ -275,18 +274,21 @@ be ARGk if succeeded."
        (ml/search-command ,name ,option ,args ,point-safe limit))))
 
 (defun ml/search-command (regex &optional option args point-safe limit)
+  "an internal function for `ml/generate-command-matcher'"
   (ml/safe-excursion
    (ml/search-regexp regex limit nil point-safe)
    (let ((beg (match-beginning 0))
          (end (match-end 0)))
      (condition-case nil
          (save-excursion
-           (let ((res (cons beg (cons end (ml/read-args option args)))))
+           (let ((res (cons beg
+                            (cons end
+                                  (save-excursion
+                                    (ml/read-args option args))))))
              (set-match-data res)
              res))
        (error (ml/search-command regex option args point-safe limit))))))
 
-;; equivalent of tex-font-lock-keywords-1
 (defconst ml/font-lock-keywords-1
   (let ((headings
          (ml/generate-command-matcher
@@ -320,9 +322,9 @@ be ARGk if succeeded."
       (,variables 1 font-lock-variable-name-face)
       (,includes 1 font-lock-constant-face)
       (,verbish 1 'tex-verbatim)
-      (,definitions 1 font-lock-function-name-face))))
+      (,definitions 1 font-lock-function-name-face)))
+  "magic-latex equivalent of `tex-font-lock-keywords-1'")
 
-;; equivalent of tex-font-lock-keywords-2
 (defconst ml/font-lock-keywords-2
   (append ml/font-lock-keywords-1
           (let ((bold
@@ -356,9 +358,9 @@ be ARGk if succeeded."
               (,quotes . font-lock-string-face)
               (,specials-1 . font-lock-warning-face)
               (,specials-2 . font-lock-warning-face)
-              (,other-commands . font-lock-keyword-face)))))
+              (,other-commands . font-lock-keyword-face))))
+  "magic-latex equivalent of `tex-font-lock-keywords-2'")
 
-;; NOT compatible with tex-font-lock-keywords
 (defconst ml/font-lock-keywords-3
   (append ml/font-lock-keywords-2
           (let ((title (ml/generate-command-matcher "\\\\title\\>" nil 1))
@@ -367,14 +369,7 @@ be ARGk if succeeded."
                 (diminish "{}\\|&")
                 (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
                 (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
-                (black (ml/generate-command-matcher "\\\\textcolor{black}" nil 1))
-                (white (ml/generate-command-matcher "\\\\textcolor{white}" nil 1))
-                (red (ml/generate-command-matcher "\\\\textcolor{red}" nil 1))
-                (green (ml/generate-command-matcher "\\\\textcolor{green}" nil 1))
-                (blue (ml/generate-command-matcher "\\\\textcolor{blue}" nil 1))
-                (cyan (ml/generate-command-matcher "\\\\textcolor{cyan}" nil 1))
-                (magenta (ml/generate-command-matcher "\\\\textcolor{magenta}" nil 1))
-                (yellow (ml/generate-command-matcher "\\\\textcolor{yellow}" nil 1))
+                (color (ml/generate-command-matcher "\\\\textcolor\\>" nil 2))
                 (type
                  (ml/generate-command-matcher
                   (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
@@ -388,16 +383,18 @@ be ARGk if succeeded."
               (,diminish . 'shadow)
               (,underline 1 'underline)
               (,overline 1 'ml/overline)
-              (,black 1 'ml/black)
-              (,white 1 'ml/white)
-              (,red 1 'ml/red)
-              (,green 1 'ml/green)
-              (,blue 1 'ml/blue)
-              (,cyan 1 'ml/cyan)
-              (,magenta 1 'ml/magenta)
-              (,yellow 1 'ml/yellow)
+              (,color 2 (let ((str (match-string 1)))
+                          (cond ((string= str "black") 'ml/black)
+                                ((string= str "white") 'ml/white)
+                                ((string= str "red") 'ml/red)
+                                ((string= str "green") 'ml/green)
+                                ((string= str "blue") 'ml/blue)
+                                ((string= str "cyan") 'ml/cyan)
+                                ((string= str "magenta") 'ml/magenta)
+                                ((string= str "yellow") 'ml/yellow))))
               (,type 1 'ml/type)
-              (,box 1 'ml/box)))))
+              (,box 1 'ml/box))))
+  "extra keyword highlighting")
 
 ;; + block highlighting
 
@@ -432,27 +429,33 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
        (error (ml/search-block regex option args point-safe limit))))))
 
 (defconst ml/block-commands
-  `((,(ml/generate-block-matcher "\\\\tiny\\>" nil nil) . ml/tiny)
-    (,(ml/generate-block-matcher "\\\\scriptsize\\>" nil nil) . ml/script)
-    (,(ml/generate-block-matcher "\\\\footnotesize\\>" nil nil) . ml/footnote)
-    (,(ml/generate-block-matcher "\\\\small\\>" nil nil) . ml/small)
-    (,(ml/generate-block-matcher "\\\\large\\>" nil nil) . ml/large)
-    (,(ml/generate-block-matcher "\\\\Large\\>" nil nil) . ml/llarge)
-    (,(ml/generate-block-matcher "\\\\LARGE\\>" nil nil) . ml/xlarge)
-    (,(ml/generate-block-matcher "\\\\huge\\>" nil nil) . ml/huge)
-    (,(ml/generate-block-matcher "\\\\Huge\\>" nil nil) . ml/hhuge)
-    (,(ml/generate-block-matcher "\\\\tt\\>" nil nil) . ml/type)
-    (,(ml/generate-block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil) . italic)
-    (,(ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil) . bold)
-    (,(ml/generate-block-matcher "\\\\color{black}" nil nil) . ml/black)
-    (,(ml/generate-block-matcher "\\\\color{white}" nil nil) . ml/white)
-    (,(ml/generate-block-matcher "\\\\color{red}" nil nil) . ml/red)
-    (,(ml/generate-block-matcher "\\\\color{green}" nil nil) . ml/green)
-    (,(ml/generate-block-matcher "\\\\color{blue}" nil nil) . ml/blue)
-    (,(ml/generate-block-matcher "\\\\color{cyan}" nil nil) . ml/cyan)
-    (,(ml/generate-block-matcher "\\\\color{magenta}" nil nil) . ml/magenta)
-    (,(ml/generate-block-matcher "\\\\color{yellow}" nil nil) . ml/yellow))
-  "list of (MATCHER . FACE)")
+  `((,(ml/generate-block-matcher "\\\\tiny\\>" nil nil) . 'ml/tiny)
+    (,(ml/generate-block-matcher "\\\\scriptsize\\>" nil nil) . 'ml/script)
+    (,(ml/generate-block-matcher "\\\\footnotesize\\>" nil nil) . 'ml/footnote)
+    (,(ml/generate-block-matcher "\\\\small\\>" nil nil) . 'ml/small)
+    (,(ml/generate-block-matcher "\\\\large\\>" nil nil) . 'ml/large)
+    (,(ml/generate-block-matcher "\\\\Large\\>" nil nil) . 'ml/llarge)
+    (,(ml/generate-block-matcher "\\\\LARGE\\>" nil nil) . 'ml/xlarge)
+    (,(ml/generate-block-matcher "\\\\huge\\>" nil nil) . 'ml/huge)
+    (,(ml/generate-block-matcher "\\\\Huge\\>" nil nil) . 'ml/hhuge)
+    (,(ml/generate-block-matcher "\\\\tt\\>" nil nil) . 'ml/type)
+    (,(ml/generate-block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil) . 'italic)
+    (,(ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil) . 'bold)
+    (,(ml/generate-block-matcher "\\\\color" nil 1)
+     . (let ((col (match-string 2)))
+         (cond ((string= col "black") 'ml/black)
+               ((string= col "white") 'ml/white)
+               ((string= col "red") 'ml/red)
+               ((string= col "green") 'ml/green)
+               ((string= col "blue") 'ml/blue)
+               ((string= col "cyan") 'ml/cyan)
+               ((string= col "magenta") 'ml/magenta)
+               ((string= col "yellow") 'ml/yellow)))))
+  "an alist of (MATCHER . FACE). MATCHER is a function that takes
+an argument, limit of the search, and does a forward search like
+`search-forward-regexp' then sets match-data properly. FACE is *a
+sexp* which is evaluated to a face. (match-string 1) will be
+propertized with the face.")
 
 (defun ml/make-block-overlay (com-from com-to hlt-from hlt-to &rest props)
   (let* ((ov1 (make-overlay com-from com-to))
@@ -481,10 +484,11 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
       (delete-overlay ov)))
   (dolist (command ml/block-commands)
     (save-excursion
-      (while (funcall (car command) end)
-        (ml/make-block-overlay (match-beginning 0) (match-end 0)
-                               (match-beginning 1) (match-end 1)
-                               'face (cdr command))))))
+      (let ((regexp (car command)))
+        (while (funcall regexp end)
+          (ml/make-block-overlay (match-beginning 0) (match-end 0)
+                                 (match-beginning 1) (match-end 1)
+                                 'face (eval (cdr command))))))))
 
 ;; + pretty symbol/suscript
 
@@ -608,7 +612,7 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
     ;; others
     ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
     ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
-    ("\\\\\\(?:text\\)?backslash\\>" . "＼") ("\\\\circ\\>" . "○")
+    ("\\\\\\(?:text\\)?backslash\\>" . "＼") ("\\\\circ\\>" . "ｏ")
     ("\\\\star\\>" . "⋆") ("\\\\S\\>" . "§")
     ("\\\\dagger\\>" . "†") ("\\\\ddag\\>" . "‡")
     ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
@@ -648,23 +652,23 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
 
 (defconst ml/accents
   `(("\\\\\\(?:mathbb\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc cl -86 0) ch)))
+     . (let ((ch (string-to-char (match-string 1)))) (compose-chars ch '(cc cl -86 0) ch)))
     ("\\\\\\(?:vec\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?→)))
-    ("\\\\\\(?:hat\\|\\^\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?^)))
-    ("\\\\\\(?:acute\\|'\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?')))
-    ("\\\\\\(?:grave\\|`\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?`)))
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?→))
     ("\\\\\\(?:tilde\\|~\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?~)))
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?~))
     ("\\\\\\(?:bar\\|=\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?-)))
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?-))
     ("\\\\\\(?:dot\\|\\.\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?・)))
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?・))
+    ("\\\\\\(?:hat\\|\\^\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?^))
+    ("\\\\\\(?:acute\\|'\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?'))
     ("\\\\\\(?:\"\\|H\\|ddot\\){\\([^}]\\)}"
-     . ,(lambda (ch) (compose-chars (string-to-char ch) '(cc Bc 0 50) ?\")))))
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?\"))
+    ("\\\\\\(?:grave\\|`\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 30) ?`))))
 
 (defconst ml/symbols
   (append (mapcar (lambda (pattern)
@@ -736,19 +740,17 @@ the command name."
   ;; prettify symbols
   (dolist (symbol ml/symbols)
     (save-excursion
-      (while (ignore-errors (ml/search-regexp (car symbol) end nil t))
-        (let* ((ov (catch 'found
-                     (dolist (ov (overlays-at (match-beginning 0)))
-                       (when (eq (overlay-get ov 'category) 'magic-latex-pretty)
-                         (throw 'found ov)))))
-               (oldprop (and ov (overlay-get ov 'display)))
-               (dispstr (cdr symbol))
-               (dispstr (if (stringp dispstr) dispstr
-                          (funcall dispstr (match-string 1)))))
-          (unless (stringp oldprop)
-            (ml/make-pretty-overlay
-             (match-beginning 0) (match-end 0) 'priority 1 'intangible t
-             'display (propertize dispstr 'display oldprop))))))))
+      (let ((regex (car symbol)))
+        (while (ignore-errors (ml/search-regexp regex end nil t))
+          (let* ((ov (catch 'found
+                       (dolist (ov (overlays-at (match-beginning 0)))
+                         (when (eq (overlay-get ov 'category) 'magic-latex-pretty)
+                           (throw 'found ov)))))
+                 (oldprop (and ov (overlay-get ov 'display))))
+            (unless (stringp oldprop)
+              (ml/make-pretty-overlay
+               (match-beginning 0) (match-end 0) 'priority 1 'intangible t
+               'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
 
 ;; + activate
 
