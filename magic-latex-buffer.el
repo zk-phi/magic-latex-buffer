@@ -487,14 +487,17 @@ propertized with the face.")
       (setq props (cddr props)))
     ov2))
 
+(defun ml/remove-block-overlays (beg end)
+  (dolist (ov (overlays-in beg end))
+    (when (eq (overlay-get ov 'category) 'magic-latex-block)
+      (delete-overlay (overlay-get ov 'partner))
+      (delete-overlay ov))))
+
 (defun ml/jit-block-highlighter (beg end)
   (condition-case nil
       (progn (ml/skip-blocks 1 nil t) (point))
     (error (goto-char 1)))
-  (dolist (ov (overlays-in (point) end))
-    (when (eq (overlay-get ov 'category) 'magic-latex-block)
-      (delete-overlay (overlay-get ov 'partner))
-      (delete-overlay ov)))
+  (ml/remove-block-overlays (point) end)
   (dolist (command ml/block-commands)
     (save-excursion
       (let ((regexp (car command)))
@@ -704,6 +707,9 @@ propertized with the face.")
       (setq props (cddr props)))
     ov))
 
+(defun ml/remove-pretty-overlays (beg end)
+  (remove-overlays beg end 'category 'magic-latex-pretty))
+
 (defun ml/search-suscript (point-safe limit)
   "search forward something like \"^{BODY}\" or \"_{BODY}\" and
 set (match-string 0) to \"_\" or \"^\", (match-string 1) to
@@ -732,7 +738,7 @@ the command name."
 
 (defun ml/jit-prettifier (beg end)
   (goto-char beg)
-  (remove-overlays beg end 'category 'magic-latex-pretty)
+  (ml/remove-pretty-overlays beg end)
   ;; prettify suscripts
   (save-excursion
     (while (ignore-errors (ml/search-suscript t end))
