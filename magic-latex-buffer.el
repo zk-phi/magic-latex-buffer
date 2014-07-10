@@ -336,7 +336,7 @@ be ARGk if succeeded."
         (citations
          (ml/generate-command-matcher
           (ml/regexp-opt
-           '("label" "ref" "pageref" "vref" "eqref" "cite"
+           '("label" "ref" "pageref" "vref" "eqref" "cite" "Cite"
              "nocite" "index" "glossary" "bibitem" "citep" "citet")) t 1))
         (quotes
          (concat (regexp-opt `("``" "\"<" "\"`" "<<" "«") t)
@@ -637,9 +637,9 @@ propertized with the face.")
   '(
     ;; TeX commands
     ("\\\\begin\\>" . "▽") ("\\\\end\\>" . "△")
-    ("\\\\\\(bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
-    ("\\\\ref\\>" . "☞") ("\\\\cite\\>" . "‡")
-    ("\\\\footnote\\(?:mark\\)?\\>" . "†")
+    ("\\\\\\(?:bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
+    ("\\\\ref\\>" . "☞") ("\\\\\\(?:c\\|C\\)ite\\>" . "†")
+    ("\\\\footnote\\(?:mark\\)?\\>" . "‡")
     ("\\\\left\\>" . "¡") ("\\\\right\\>" . "!")
     ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
     ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
