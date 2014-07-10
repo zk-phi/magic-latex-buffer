@@ -745,9 +745,9 @@ the command name."
       (let* ((beg (match-beginning 1))
              (end (match-end 1))
              (ov1 (ml/make-pretty-overlay
-                   (match-beginning 0) (match-end 0) 'invisible t 'intangible t))
+                   (match-beginning 0) (match-end 0) 'invisible t))
              (ov2 (ml/make-pretty-overlay
-                   beg end 'intangible (if (= (- end beg) 1) t nil))))
+                   beg end)))
         (cl-case (string-to-char (match-string 0))
           ((?_) (overlay-put ov2 'display '((raise -0.2) (height 0.8))))
           ((?^) (overlay-put ov2 'display '((raise 0.2) (height 0.8))))))))
@@ -763,7 +763,7 @@ the command name."
                  (oldprop (and ov (overlay-get ov 'display))))
             (unless (stringp oldprop)
               (ml/make-pretty-overlay
-               (match-beginning 0) (match-end 0) 'priority 1 'intangible t
+               (match-beginning 0) (match-end 0) 'priority 1
                'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
 
 ;; + activate
