@@ -777,6 +777,9 @@ the command name."
   (font-lock-add-keywords nil ml/keywords 'set)
   (jit-lock-register 'ml/jit-prettifier)
   (jit-lock-register 'ml/jit-block-highlighter)
+  ;; jit-lock highlighters assume that the region is already fontified
+  ;; (so that they can recognize verbatim, constant and comment)
+  (jit-lock-register 'font-lock-fontify-region)
   (set (make-local-variable 'iimage-mode-image-regex-alist)
        '(("\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*{\\([^}]*\\)}" . 1)))
   (iimage-mode 1))
