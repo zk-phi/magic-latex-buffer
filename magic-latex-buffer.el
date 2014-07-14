@@ -223,7 +223,7 @@ examples:
      (if (not (ml/search-regexp
                (if brace-only
                    "\\({\\)\\|\\(}\\)"
-                 "\\(\\\\begin{[^}]*}\\|{\\|\\[\\)\\|\\(\\\\end{[^}]*}\\|}\\|]\\)")
+                 "\\(\\\\begin[^}]*}\\>\\|{\\|\\[\\)\\|\\(\\\\end{[^}]*}\\|}\\|]\\)")
                nil backward))
          (error "unmatched blocks")
        (setq n (if backward
@@ -765,16 +765,6 @@ the command name."
               (ml/make-pretty-overlay
                (match-beginning 0) (match-end 0) 'priority 1
                'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
-
-;; + interactive commands
-
-(defun magic-latex-forward-sexp ()
-  (interactive)
-  (ml/skip-blocks 0 t))
-
-(defun magic-latex-backward-sexp ()
-  (interactive)
-  (ml/skip-blocks 0 t t))
 
 ;; + activate
 
