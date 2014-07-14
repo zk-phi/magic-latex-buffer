@@ -223,7 +223,7 @@ examples:
      (if (not (ml/search-regexp
                (if brace-only
                    "\\({\\)\\|\\(}\\)"
-                 "\\(\\\\begin\\>\\|{\\|\\[\\)\\|\\(\\\\end\\>\\|}\\|]\\)")
+                 "\\(\\\\begin[^}]*}\\>\\|{\\|\\[\\)\\|\\(\\\\end{[^}]*}\\|}\\|]\\)")
                nil backward))
          (error "unmatched blocks")
        (setq n (if backward
