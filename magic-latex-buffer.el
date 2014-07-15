@@ -76,9 +76,34 @@
 
 ;; +-+ screen, itembox, boxnote, shadeboxとかの枠？
 
-;; - page-break-lines みたいな水平線？
+;; 試作。行末にテキスト挿入したときの挙動、beginとendで線の長さが違う
 
-;; +-+ ベクトルとかアクセント記号 composeで作れる？
+;; (defun ml/jit-ascmac (beg end)
+;;   (goto-char beg)
+;;   (remove-overlays beg end 'category 'magic-latex-ascmac)
+;;   (while (ignore-errors
+;;            (ml/search-regexp
+;;             "\\(\\\\\\(?:\\(begin\\)\\|end\\){screen}[\s\t]*\\)\\(\n\\)?"))
+;;     (let ((ov1 (make-overlay (match-beginning 1) (match-end 1)))
+;;           (face (if (match-beginning 2) 'underline 'ml/overline)))
+;;       (overlay-put ov1 'category 'magic-latex-ascmac)
+;;       (overlay-put ov1 'face face)
+;;       (when (match-beginning 3)
+;;         (let* ((ov2 (make-overlay (match-beginning 3) (match-end 3)))
+;;                (m1 (save-excursion
+;;                      (goto-char (match-beginning 1))
+;;                      (current-column)))
+;;                (m2 (save-excursion
+;;                      (goto-char (match-end 1))
+;;                      (current-column))))
+;;           (overlay-put ov2 'category 'magic-latex-ascmac)
+;;           (overlay-put ov2 'display
+;;                        (propertize
+;;                         (concat (make-string (- (window-width) m1 m2) ?\s) "\n")
+;;                         'face face)))))))
+
+;; (jit-lock-register 'ml/jit-ascmac)
+
 ;; +-+ mathcalとか
 ;; +-+ point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 ;; + vars, consts
