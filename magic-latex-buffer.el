@@ -120,6 +120,11 @@ correct inline-math recognition.")
                     :inherit font-lock-function-name-face
                     :height 1.6)
 
+(make-face 'ml/subsection)
+(set-face-attribute 'ml/subsection nil
+                    :inherit font-lock-function-name-face
+                    :height 1.2)
+
 (make-face 'ml/box)
 (set-face-attribute 'ml/box nil :box t)
 (make-face 'ml/overline)
@@ -361,9 +366,10 @@ be ARGk if succeeded."
   "highlighting keywords based on `tex-font-lock-keywords-2'")
 
 (defconst ml/keywords-3
-  (let ((title (ml/generate-command-matcher "\\\\title\\>" nil 1))
+  (let ((title (ml/generate-command-matcher "\\\\title\\>\\*?" nil 1))
         (chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
         (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
+        (subsection (ml/generate-command-matcher "\\\\subsection\\>\\*?" t 1))
         (diminish "{}\\|&")
         (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
         (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
@@ -378,6 +384,7 @@ be ARGk if succeeded."
     `((,title 1 'ml/title t)
       (,chapter 1 'ml/chapter t)
       (,section 1 'ml/section t)
+      (,subsection 1 'ml/subsection t)
       (,diminish 0 'shadow t)
       (,underline 1 'underline t)
       (,overline 1 'ml/overline t)
