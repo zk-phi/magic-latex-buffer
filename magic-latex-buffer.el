@@ -113,7 +113,7 @@ correct inline-math recognition.")
 (make-face 'ml/chapter)
 (set-face-attribute 'ml/chapter nil
                     :inherit font-lock-function-name-face
-                    :height 1.7)
+                    :height 1.8)
 
 (make-face 'ml/section)
 (set-face-attribute 'ml/section nil
