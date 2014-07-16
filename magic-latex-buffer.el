@@ -19,7 +19,7 @@
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
 ;; Version: 0.1.0
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
 ;;; Commentary:
 
@@ -62,7 +62,7 @@
     font-lock-constant-face
     tex-verbatim)
   "list of faces which magic-latex should ignore"
-  :group 'emacs)
+  :group 'magic-latex-buffer)
 
 ;; + vars, consts
 
@@ -750,7 +750,7 @@ the command name."
                'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
 
 ;; + activate
-
+;;;###autoload
 (defun magic-latex-buffer ()
   (interactive)
   (jit-lock-mode 1)
