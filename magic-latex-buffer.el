@@ -38,6 +38,7 @@
 
 ;;; Change Log:
 ;; 0.0.0 test release
+;; 0.1.0 add highlights, fix fatal bugs
 
 ;;; Code:
 
@@ -47,65 +48,6 @@
 (require 'iimage)
 (require 'cl-lib)
 
-;; + development notes
-;; +-+ アライン
-
-;; - flushright/left, center, centering
-
-;; - quote, quotation (左に線を出す？)
-
-;; - センタリング
-;; -- 右揃えなら (- right (,width))
-;;
-;; (defun test ()
-;;   (interactive)
-;;   (save-excursion
-;;     (let* ((lpoint (progn (back-to-indentation)
-;;                           (point)))
-;;            (lpixel (posn-x-y (posn-at-point)))
-;;            (rpoint (progn (end-of-visual-line)
-;;                           (point)))
-;;            (rpixel (posn-x-y (posn-at-point)))
-;;            (width (- (car rpixel) (car lpixel))))
-;;       (let ((ov (make-overlay lpoint lpoint)))
-;;         (overlay-put ov 'before-string
-;;                      (propertize " " 'display
-;;                                  `((space :align-to (- center (,(/ width 2)))))))))))
-
-;; - begin~endとかのカタマリは全体でセンタリング
-
-;; +-+ screen, itembox, boxnote, shadeboxとかの枠？
-
-;; 試作。行末にテキスト挿入したときの挙動、beginとendで線の長さが違う
-
-;; (defun ml/jit-ascmac (beg end)
-;;   (goto-char beg)
-;;   (remove-overlays beg end 'category 'magic-latex-ascmac)
-;;   (while (ignore-errors
-;;            (ml/search-regexp
-;;             "\\(\\\\\\(?:\\(begin\\)\\|end\\){screen}[\s\t]*\\)\\(\n\\)?"))
-;;     (let ((ov1 (make-overlay (match-beginning 1) (match-end 1)))
-;;           (face (if (match-beginning 2) 'underline 'ml/overline)))
-;;       (overlay-put ov1 'category 'magic-latex-ascmac)
-;;       (overlay-put ov1 'face face)
-;;       (when (match-beginning 3)
-;;         (let* ((ov2 (make-overlay (match-beginning 3) (match-end 3)))
-;;                (m1 (save-excursion
-;;                      (goto-char (match-beginning 1))
-;;                      (current-column)))
-;;                (m2 (save-excursion
-;;                      (goto-char (match-end 1))
-;;                      (current-column))))
-;;           (overlay-put ov2 'category 'magic-latex-ascmac)
-;;           (overlay-put ov2 'display
-;;                        (propertize
-;;                         (concat (make-string (- (window-width) m1 m2) ?\s) "\n")
-;;                         'face face)))))))
-
-;; (jit-lock-register 'ml/jit-ascmac)
-
-;; +-+ mathcalとか
-;; +-+ point-safeをmultiple-cursorsに対応したい （カーソルごとに結果が変わる）
 ;; + vars, consts
 
 (defconst ml/syntax-table
