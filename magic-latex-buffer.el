@@ -750,6 +750,7 @@ the command name."
                'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
 
 ;; + activate
+
 ;;;###autoload
 (defun magic-latex-buffer ()
   (interactive)
