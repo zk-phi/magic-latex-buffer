@@ -22,8 +22,6 @@ LaTeX-mode のシンタックスハイライトを激しく
 
 - inline image preview powered by =iimage-mode=
 
-  [[./imgs/iimage.gif]]
-
 ** Installation
 
 Put magic-latex-buffer.el into a "load-path"ed directory, and load it in your
