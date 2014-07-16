@@ -48,7 +48,21 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-version)
+(defconst magic-latex-buffer-version "0.1.0")
+
+;; + customizable vars
+
+(defgroup magic-latex-buffer nil
+  "magical syntax highlighting for LaTeX-mode buffers"
+  :group 'emacs)
+
+(defcustom magic-latex-ignored-properties
+  '(font-lock-comment-face
+    font-lock-comment-delimiter-face
+    font-lock-constant-face
+    tex-verbatim)
+  "list of faces which magic-latex should ignore"
+  :group 'emacs)
 
 ;; + vars, consts
 
@@ -59,15 +73,8 @@
   "like `tex-mode-syntax-table' but treat $ as a string quote for
 correct inline-math recognition.")
 
-(defconst magic-latex-ignored-properties
-  '(font-lock-comment-face
-    font-lock-comment-delimiter-face
-    font-lock-constant-face
-    tex-verbatim)
-  "list of faces which magic-latex should ignore")
-
 (defvar-local ml/jit-point nil
-  "save the point while font-locking")
+  "store the point while font-locking")
 
 (defvar-local ml/buffer-fancy-p nil
   "whether this latex buffer is fancy")
@@ -238,7 +245,7 @@ point."
 
 ;; + keyword highlighting via font-lock
 
-(defun ml/generate-command-matcher (name &optional option args point-safe)
+(defun ml/command-matcher (name &optional option args point-safe)
   "generate a forward search command that matches something like
 \"\\NAME[OPT]{ARG1}...{ARGn}\" and moves the cursor just after
 the NAME. (match-string 0) will be NAME and (match-string k) will
@@ -248,7 +255,7 @@ be ARGk if succeeded."
        (ml/search-command ,name ,option ,args ,point-safe limit))))
 
 (defun ml/search-command (regex &optional option args point-safe limit)
-  "an internal function for `ml/generate-command-matcher'"
+  "an internal function for `ml/command-matcher'"
   (ml/safe-excursion
    (ml/search-regexp regex limit nil point-safe)
    (let ((beg (match-beginning 0))
@@ -265,7 +272,7 @@ be ARGk if succeeded."
 
 (defconst ml/keywords-1
   (let ((headings
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("title"  "begin" "end" "chapter" "part" "section" "subsection"
              "subsubsection" "paragraph" "subparagraph" "subsubparagraph"
@@ -276,19 +283,19 @@ be ARGk if succeeded."
              "newcommand*" "renewcommand*" "providecommand*" "newenvironment*"
              "renewenvironment*" "newtheorem*" "renewtheorem*")) t 1))
         (variables
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("newcounter" "newcounter*" "setcounter" "addtocounter"
              "setlength" "addtolength" "settowidth")) nil 1))
         (includes
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("input" "include" "includeonly" "bibliography"
              "epsfig" "psfig" "epsf" "nofiles" "usepackage"
              "documentstyle" "documentclass" "verbatiminput"
              "includegraphics" "includegraphics*")) t 1))
         (verbish
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt '("url" "nolinkurl" "path")) t 1))
         (definitions                    ; i have no idea what this is
           "^[ \t]*\\\\def *\\\\\\(\\(\\w\\|@\\)+\\)"))
@@ -301,14 +308,14 @@ be ARGk if succeeded."
 
 (defconst ml/keywords-2
   (let ((bold
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("textbf" "textsc" "textup" "boldsymbol" "pmb" "bm")) nil 1))
         (italic
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt '("textit" "textsl" "emph")) nil 1))
         (citations
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("label" "ref" "pageref" "vref" "eqref" "cite" "Cite"
              "nocite" "index" "glossary" "bibitem" "citep" "citet")) t 1))
@@ -316,15 +323,15 @@ be ARGk if succeeded."
          (concat (regexp-opt `("``" "\"<" "\"`" "<<" "«") t)
                  "[^'\">{]+" (regexp-opt `("''" "\">" "\"'" ">>" "»") t)))
         (specials-1
-         (ml/generate-command-matcher "\\\\\\(?:\\\\\\*?\\)" nil nil))
+         (ml/command-matcher "\\\\\\(?:\\\\\\*?\\)" nil nil))
         (specials-2
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("linebreak" "nolinebreak" "pagebreak" "nopagebreak"
              "newline" "newpage" "clearpage" "cleardoublepage"
              "displaybreak" "allowdisplaybreaks" "enlargethispage")) nil nil))
         (other-commands
-         (ml/generate-command-matcher "\\\\\\(?:[a-zA-Z@]+\\**\\|[^ \t\n]\\)")))
+         (ml/command-matcher "\\\\\\(?:[a-zA-Z@]+\\**\\|[^ \t\n]\\)")))
     `((,bold 1 'bold append)
       (,italic 1 'italic append)
       (,citations 1 font-lock-constant-face)
@@ -335,19 +342,19 @@ be ARGk if succeeded."
   "highlighting keywords based on `tex-font-lock-keywords-2'")
 
 (defconst ml/keywords-3
-  (let ((title (ml/generate-command-matcher "\\\\title\\>\\*?" nil 1))
-        (chapter (ml/generate-command-matcher "\\\\chapter\\>\\*?" t 1))
-        (section (ml/generate-command-matcher "\\\\section\\>\\*?" t 1))
-        (subsection (ml/generate-command-matcher "\\\\subsection\\>\\*?" t 1))
+  (let ((title (ml/command-matcher "\\\\title\\>\\*?" nil 1))
+        (chapter (ml/command-matcher "\\\\chapter\\>\\*?" t 1))
+        (section (ml/command-matcher "\\\\section\\>\\*?" t 1))
+        (subsection (ml/command-matcher "\\\\subsection\\>\\*?" t 1))
         (diminish "{}\\|&")
-        (underline (ml/generate-command-matcher "\\\\underline\\>" nil 1))
-        (overline (ml/generate-command-matcher "\\\\overline\\>" nil 1))
-        (color (ml/generate-command-matcher "\\\\textcolor\\>" nil 2))
+        (underline (ml/command-matcher "\\\\underline\\>" nil 1))
+        (overline (ml/command-matcher "\\\\overline\\>" nil 1))
+        (color (ml/command-matcher "\\\\textcolor\\>" nil 2))
         (type
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
         (box
-         (ml/generate-command-matcher
+         (ml/command-matcher
           (ml/regexp-opt
            '("ovalbox" "Ovalbox" "fbox" "doublebox" "shadowbox")) nil 1)))
     `((,title 1 'ml/title t)
@@ -375,7 +382,7 @@ be ARGk if succeeded."
 
 ;; + block highlighting
 
-(defun ml/generate-block-matcher (name &optional option args point-safe)
+(defun ml/block-matcher (name &optional option args point-safe)
   "generate a forward search command that matches something like
 \"\\begin{env} \\NAME[OPT]{ARG1}...{ARGn} ... BODY
 ... \\end{env}\" and moves the cursor just after the
@@ -406,19 +413,19 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
        (error (ml/search-block regex option args point-safe limit))))))
 
 (defconst ml/block-commands
-  (let ((tiny (ml/generate-block-matcher "\\\\tiny\\>" nil nil))
-        (script (ml/generate-block-matcher "\\\\scriptsize\\>" nil nil))
-        (footnote (ml/generate-block-matcher "\\\\footnotesize\\>" nil nil))
-        (small (ml/generate-block-matcher "\\\\small\\>" nil nil))
-        (large (ml/generate-block-matcher "\\\\large\\>" nil nil))
-        (llarge (ml/generate-block-matcher "\\\\Large\\>" nil nil))
-        (xlarge (ml/generate-block-matcher "\\\\LARGE\\>" nil nil))
-        (huge (ml/generate-block-matcher "\\\\huge\\>" nil nil))
-        (hhuge (ml/generate-block-matcher "\\\\Huge\\>" nil nil))
-        (type (ml/generate-block-matcher "\\\\tt\\>" nil nil))
-        (italic (ml/generate-block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil))
-        (bold (ml/generate-block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil))
-        (color (ml/generate-block-matcher "\\\\color" nil 1)))
+  (let ((tiny (ml/block-matcher "\\\\tiny\\>" nil nil))
+        (script (ml/block-matcher "\\\\scriptsize\\>" nil nil))
+        (footnote (ml/block-matcher "\\\\footnotesize\\>" nil nil))
+        (small (ml/block-matcher "\\\\small\\>" nil nil))
+        (large (ml/block-matcher "\\\\large\\>" nil nil))
+        (llarge (ml/block-matcher "\\\\Large\\>" nil nil))
+        (xlarge (ml/block-matcher "\\\\LARGE\\>" nil nil))
+        (huge (ml/block-matcher "\\\\huge\\>" nil nil))
+        (hhuge (ml/block-matcher "\\\\Huge\\>" nil nil))
+        (type (ml/block-matcher "\\\\tt\\>" nil nil))
+        (italic (ml/block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil))
+        (bold (ml/block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil))
+        (color (ml/block-matcher "\\\\color" nil 1)))
     `((,tiny . 'ml/tiny)
       (,script . 'ml/script)
       (,footnote . 'ml/footnote)
