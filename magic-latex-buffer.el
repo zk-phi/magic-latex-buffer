@@ -766,14 +766,13 @@ the command name."
   (set (make-local-variable 'iimage-mode-image-regex-alist)
        `((,(concat "\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*"
                    "{\\(" iimage-mode-image-filename-regex "\\)}") . 1)))
-  (iimage-mode 1))
+  (iimage-mode 1)
+  (add-to-list 'tex-verbatim-environments "Verbatim")
+  (add-to-list 'tex-verbatim-environments "lstlisting"))
 
 (defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
   (let ((ml/jit-point (point)))
     ad-do-it))
-
-(add-to-list 'tex-verbatim-environments "Verbatim")
-(add-to-list 'tex-verbatim-environments "lstlisting")
 
 ;; + provide
 
