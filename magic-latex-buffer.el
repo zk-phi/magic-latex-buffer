@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 0.0.0
+;; Version: 0.1.0
 ;; Package-Requires: ((cl-lib "0.5"))
 
 ;;; Commentary:
@@ -47,6 +47,8 @@
 (require 'tex-mode)
 (require 'iimage)
 (require 'cl-lib)
+
+(defconst magic-latex-version)
 
 ;; + vars, consts
 
@@ -452,7 +454,7 @@ propertized with the face.")
                           (move-overlay ov
                                         (min from (overlay-start ov))
                                         (max to (overlay-end ov))))))))
-    (overlay-put ov1 'category 'magic-latex-block)
+    (overlay-put ov1 'category 'ml/ov-block)
     (overlay-put ov1 'partner ov2)
     (overlay-put ov2 'insert-in-front-hooks hooks)
     (overlay-put ov2 'insert-behind-hooks hooks)
@@ -463,7 +465,7 @@ propertized with the face.")
 
 (defun ml/remove-block-overlays (beg end)
   (dolist (ov (overlays-in beg end))
-    (when (eq (overlay-get ov 'category) 'magic-latex-block)
+    (when (eq (overlay-get ov 'category) 'ml/ov-block)
       (delete-overlay (overlay-get ov 'partner))
       (delete-overlay ov))))
 
@@ -673,7 +675,7 @@ propertized with the face.")
 (defun ml/make-pretty-overlay (from to &rest props)
   (let* ((ov (make-overlay from to))
          (hooks (list `(lambda (&rest _) (delete-overlay ,ov)))))
-    (overlay-put ov 'category 'magic-latex-pretty)
+    (overlay-put ov 'category 'ml/ov-pretty)
     (overlay-put ov 'modification-hooks hooks)
     (overlay-put ov 'insert-in-front-hooks hooks)
     (while props
@@ -682,7 +684,7 @@ propertized with the face.")
     ov))
 
 (defun ml/remove-pretty-overlays (beg end)
-  (remove-overlays beg end 'category 'magic-latex-pretty))
+  (remove-overlays beg end 'category 'ml/ov-pretty))
 
 (defun ml/search-suscript (point-safe limit)
   "search forward something like \"^{BODY}\" or \"_{BODY}\" and
@@ -732,7 +734,7 @@ the command name."
         (while (ignore-errors (ml/search-regexp regex end nil t))
           (let* ((ov (catch 'found
                        (dolist (ov (overlays-at (match-beginning 0)))
-                         (when (eq (overlay-get ov 'category) 'magic-latex-pretty)
+                         (when (eq (overlay-get ov 'category) 'ml/ov-pretty)
                            (throw 'found ov)))))
                  (oldprop (and ov (overlay-get ov 'display))))
             (unless (stringp oldprop)
