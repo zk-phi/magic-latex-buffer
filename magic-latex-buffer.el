@@ -501,7 +501,8 @@ propertized with the face.")
     ("\\\\underline\\>"
      . (propertize "U" 'face 'underline))
     ("\\\\overline\\>"
-     . (propertize "O" 'face 'ml/overline))))
+     . (propertize "O" 'face 'ml/overline))
+    ("\\\\mbox\\>" . "'")))
 
 (defconst ml/relation-symbols
   '(
@@ -555,8 +556,6 @@ propertized with the face.")
     ("\\\\oint\\>" . "∮")
     ("\\\\varlimsup\\>" . (propertize "lim" 'face 'ml/overline))
     ("\\\\varliminf\\>" . (propertize "lim" 'face 'underline))
-    ;; computers
-    ("\\\\react\\>" . ":-")
     ))
 
 (defconst ml/arrow-symbols
@@ -626,6 +625,7 @@ propertized with the face.")
     ("\\\\left\\>" . "¡") ("\\\\right\\>" . "!")
     ("~\\|\\\\\\(?:[,;\s]\\|hspace\\>\\)" . "␣")
     ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
+    ("\\\\multicolumn\\>" . "|↔|")
     ("\\\\TeX\\>"
      . (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X))
     ("\\\\LaTeX\\>"
@@ -642,6 +642,8 @@ propertized with the face.")
     ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
     ("\\\\lceil\\>" . "⌈") ("\\\\rceil\\>" . "⌉")
     ("\\\\lfloor\\>" . "⌊") ("\\\\rfloor\\>" . "⌋")
+    ;; escaped symbols
+    ("\\\\\\$" . "＄")
     ;; "&"
     ("&" . (compose-chars ?& ?|))))
 
