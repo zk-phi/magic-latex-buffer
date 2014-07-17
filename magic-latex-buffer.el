@@ -502,7 +502,9 @@ propertized with the face.")
      . (propertize "U" 'face 'underline))
     ("\\\\overline\\>"
      . (propertize "O" 'face 'ml/overline))
-    ("\\\\mbox\\>" . "'")))
+    ("\\\\mbox\\>" . "'")
+    ("\\\\mathcal\\>" . "ℭ")
+    ))
 
 (defconst ml/relation-symbols
   '(
@@ -665,7 +667,8 @@ propertized with the face.")
     ("\\\\\\(?:\"\\|H\\|ddot\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?\"))
     ("\\\\\\(?:grave\\|`\\){\\([^}]\\)}"
-     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 30) ?`))))
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 30) ?`))
+    ))
 
 (defconst ml/symbols
   (append (mapcar (lambda (pattern)
