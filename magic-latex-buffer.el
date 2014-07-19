@@ -634,15 +634,17 @@ propertized with the face.")
      . (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
                       ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X))
     ;; parens
-    ("\\\\{" . (compose-chars ?\{ ?⎨))
-    ("\\\\}" . (compose-chars ?⎬ ?\}))
+    ("\\\\\\(?:{\\|lbrace\\>\\)" . "{")
+    ("\\\\\\(?:}\\|rbrace\\>\\)" . "}")
     ("\\\\|" . "║")
-    ("\\\\\\(?:double\\[\\|lBrack\\)"
+    ("\\\\lbrack\\>" . "[") ("\\\\rbrack\\>" . "]")
+    ("\\\\\\(?:double\\[\\|lBrack\\>\\)"
      . (compose-chars ?\[ '(cr cl -90 0) ?\[))
-    ("\\\\\\(?:double\\]\\|rBrack\\)"
+    ("\\\\\\(?:double\\]\\|rBrack\\>\\)"
      . (compose-chars ?\] '(cr cl -90 0) ?\]))
-    ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
     ("\\\\lceil\\>" . "⌈") ("\\\\rceil\\>" . "⌉")
+    ("\\\\lgroup\\>" . "〔") ("\\\\rgroup" . "〕")
+    ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
     ("\\\\lfloor\\>" . "⌊") ("\\\\rfloor\\>" . "⌋")
     ;; escaped symbols
     ("\\\\\\$" . "＄")
