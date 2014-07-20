@@ -647,7 +647,7 @@ propertized with the face.")
     ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
     ("\\\\lfloor\\>" . "⌊") ("\\\\rfloor\\>" . "⌋")
     ;; escaped symbols
-    ("\\\\\\$" . "＄")
+    ("\\\\\\$" . "＄") ("\\\\_" . "＿")
     ;; "&"
     ("&" . (compose-chars ?& ?|))))
 
