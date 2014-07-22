@@ -357,13 +357,13 @@ be ARGk if succeeded."
          (ml/command-matcher
           (ml/regexp-opt
            '("ovalbox" "Ovalbox" "fbox" "doublebox" "shadowbox")) nil 1)))
-    `((,title 1 'ml/title t)
-      (,chapter 1 'ml/chapter t)
-      (,section 1 'ml/section t)
-      (,subsection 1 'ml/subsection t)
-      (,diminish 0 'shadow t)
-      (,underline 1 'underline t)
-      (,overline 1 'ml/overline t)
+    `((,title 1 'ml/title append)
+      (,chapter 1 'ml/chapter append)
+      (,section 1 'ml/section append)
+      (,subsection 1 'ml/subsection append)
+      (,diminish 0 'shadow append)
+      (,underline 1 'underline append)
+      (,overline 1 'ml/overline append)
       (,color 2 (let ((str (match-string 1)))
                   (cond ((string= str "black") 'ml/black)
                         ((string= str "white") 'ml/white)
@@ -372,9 +372,9 @@ be ARGk if succeeded."
                         ((string= str "blue") 'ml/blue)
                         ((string= str "cyan") 'ml/cyan)
                         ((string= str "magenta") 'ml/magenta)
-                        ((string= str "yellow") 'ml/yellow))) t)
-      (,type 1 'ml/type t)
-      (,box 1 'ml/box t)))
+                        ((string= str "yellow") 'ml/yellow))) append)
+      (,type 1 'ml/type append)
+      (,box 1 'ml/box append)))
   "extra highlighting keywords")
 
 (defconst ml/keywords
