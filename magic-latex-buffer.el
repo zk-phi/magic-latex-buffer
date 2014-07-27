@@ -670,6 +670,8 @@ propertized with the face.")
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?\"))
     ("\\\\\\(?:grave\\|`\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 30) ?`))
+    ("\\\\r{\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?o))
     ))
 
 (defconst ml/symbols
