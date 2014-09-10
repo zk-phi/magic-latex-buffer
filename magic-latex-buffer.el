@@ -76,9 +76,6 @@ correct inline-math recognition.")
 (defvar-local ml/jit-point nil
   "store the point while font-locking")
 
-(defvar-local ml/buffer-fancy-p nil
-  "whether this latex buffer is fancy")
-
 ;; + faces
 
 (make-face 'ml/title)
@@ -761,22 +758,34 @@ the command name."
 ;; + activate
 
 ;;;###autoload
-(defun magic-latex-buffer ()
-  (interactive)
-  (jit-lock-mode 1)
-  (setq-local ml/buffer-fancy-p t)
-  (setq-local font-lock-multiline t)
-  (set-syntax-table ml/syntax-table)
-  (font-lock-add-keywords nil ml/keywords 'set)
-  (jit-lock-register 'ml/jit-prettifier)
-  (jit-lock-register 'ml/jit-block-highlighter)
-  ;; jit-lock highlighters assume that the region is already fontified
-  ;; (so that they can recognize verbatim, constant and comment)
-  (jit-lock-register 'font-lock-fontify-region)
-  (set (make-local-variable 'iimage-mode-image-regex-alist)
-       `((,(concat "\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*"
-                   "{\\(" iimage-mode-image-filename-regex "\\)}") . 1)))
-  (iimage-mode 1))
+(define-minor-mode magic-latex-buffer
+  "Minor mode that highlights latex document magically."
+  :init-value nil
+  :global nil
+  :lighter "mLaTeX"
+  (if magic-latex-buffer
+      (progn
+        (jit-lock-mode 1)
+        (setq-local font-lock-multiline t)
+        (set-syntax-table ml/syntax-table)
+        (font-lock-add-keywords nil ml/keywords 'set)
+        (jit-lock-register 'ml/jit-prettifier)
+        (jit-lock-register 'ml/jit-block-highlighter)
+        ;; jit-lock highlighters assume that the region is already fontified
+        ;; (so that they can recognize verbatim, constant and comment)
+        (jit-lock-register 'font-lock-fontify-region)
+        (set (make-local-variable 'iimage-mode-image-regex-alist)
+             `((,(concat "\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*"
+                         "{\\(" iimage-mode-image-filename-regex "\\)}") . 1)))
+        (iimage-mode 1))
+    (set-syntax-table tex-mode-syntax-table)
+    (jit-lock-unregister 'ml/jit-prettifier)
+    (jit-lock-unregister 'ml/jit-block-highlighter)
+    (jit-lock-unregister 'font-lock-fontify-region)
+    (ml/remove-block-overlays (point-min) (point-max))
+    (ml/remove-pretty-overlays (point-min) (point-max))
+    (font-lock-refresh-defaults)
+    (iimage-mode -1)))
 
 (defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
   (let ((ml/jit-point (point)))
