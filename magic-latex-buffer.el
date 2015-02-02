@@ -1,6 +1,6 @@
 ;;; magic-latex-buffer.el --- magical syntax highlighting for LaTeX-mode buffers
 
-;; Copyright (C) 2014 zk_phi
+;; Copyright (C) 2014-2015 zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -496,8 +496,11 @@ propertized with the face.")
   '(
     ;; basic
     ("\\\\eq\\>" . "＝") ("\\\\equiv\\>" . "≡")
-    ("\\\\approx\\>" . "≒") ("\\\\cong\\>" . "≅")
-    ("\\\\le\\>" . "≦") ("\\\\ge\\>" . "≧")
+    ("\\\\sim\\>" . "～") ("\\\\simeq\\>" . "≃") ("\\\\cong\\>" . "≅")
+    ("\\\\approx\\>" . "≒")
+    ("\\\\asymp\\>" . "≍")
+    ("\\\\le\\(?:q\\)?\\>" . "≦") ("\\\\ge\\(?:q\\)?\\>" . "≧")
+    ("\\\\ll\\>" . "≪") ("\\\\gg\\>" . "≫")
     ("\\\\to\\>" . "→") ("\\\\mapsto\\>" . "↦")
     ("\\\\propto\\>" . "∝")
     ;; set
@@ -524,9 +527,10 @@ propertized with the face.")
     ;; set
     ("\\\\mid\\>" . "｜") ("\\\\emptyset\\>" . "∅") ("\\\\\\(?:set\\)?minus\\>" . "＼")
     ("\\\\\\(?:big\\)?cup\\>" . "∪") ("\\\\\\(?:big\\)?cap\\>" . "∩")
+    ("\\\\uplus" . (compose-chars ?∪ ?＋))
     ("\\\\sqcup\\>" . "⊔") ("\\\\sqcap\\>" . "⊓")
     ;; logic
-    ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\\\(neg\\|lnot\\)\\>" . "￢")
+    ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\\\(?:neg\\|lnot\\)\\>" . "￢")
     ("\\\\land\\>" . "∧") ("\\\\lor\\>" . "∨")
     ;; algebra
     ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
@@ -595,9 +599,12 @@ propertized with the face.")
     ;; others
     ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
     ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
-    ("\\\\\\(?:text\\)?backslash\\>" . "＼") ("\\\\circ\\>" . "ｏ")
+    ("\\\\\\(?:text\\)?backslash\\>" . "＼")
+    ("\\\\bigcirc\\>" . "○") ("\\\\circ\\>" . "ｏ")
+    ("\\\\bullet\\>" . "●") ("\\\\diamond\\>" . "◇")
+    ("\\\\bowtie\\>" . "⋈")
     ("\\\\star\\>" . "⋆") ("\\\\S\\>" . "§")
-    ("\\\\dagger\\>" . "†") ("\\\\ddag\\>" . "‡")
+    ("\\\\dag\\(?:ger\\)?\\>" . "†") ("\\\\ddag\\(?:ger\\)?\\>" . "‡")
     ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
     ("\\\\texttrademark\\>" . "™")
     ("\\\\pounds\\>"  . "£") ("\\\\P\\>" . "¶")
