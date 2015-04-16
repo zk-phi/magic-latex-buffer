@@ -131,6 +131,7 @@ correct inline-math recognition.")
   "Face used for Huge command in magic LaTeX buffers.")
 
 ;; + utilities
+;;   + general
 
 (defmacro ml/safe-excursion (&rest body)
   "like `progn' but moves the point only when BODY succeeded with
@@ -142,6 +143,18 @@ no errors."
 (defun ml/regexp-opt (strings)
   "like regexp-opt but for LaTeX command names."
   (concat "\\\\" (regexp-opt strings) "\\>"))
+
+(defun ml/overlay-at (point prop val)
+  "Return an overlay at point, whose property PROP is VAL. If
+some overlays satisfy the condition, overlay with the highest
+priority is returned. If there's no such overlays, return nil."
+  (cl-some (lambda (ov) (when (equal (overlay-get ov prop) val) ov))
+           (sort (overlays-at point)
+                 (lambda (a b) (let ((pa (overlay-get a 'priority))
+                                     (pb (overlay-get b 'priority)))
+                                 (or (null pb) (and pa (>= pa pb))))))))
+
+;;   + LaTeX-specific
 
 (defun ml/skip-comments-and-verbs (&optional backward)
   "skip this comment or verbish environment"
@@ -727,25 +740,28 @@ the command name."
   ;; prettify suscripts
   (save-excursion
     (while (ignore-errors (ml/search-suscript t end))
-      (let* ((beg (match-beginning 1))
-             (end (match-end 1))
-             (ov1 (ml/make-pretty-overlay
-                   (match-beginning 0) (match-end 0) 'invisible t))
-             (ov2 (ml/make-pretty-overlay
-                   beg end)))
+      (let* ((body-beg (match-beginning 1))
+             (body-end (match-end 1))
+             (delim-beg (match-beginning 0))
+             (delim-end (match-end 0))
+             (oldov (ml/overlay-at body-beg 'category 'ml/ov-pretty))
+             (oldprop (and oldov (overlay-get oldov 'display)))
+             (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
+             (height-base (or (cadr (assoc 'height oldprop)) 1.0))
+             (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
+             (ov2 (ml/make-pretty-overlay body-beg body-end)))
         (cl-case (string-to-char (match-string 0))
-          ((?_) (overlay-put ov2 'display '((raise -0.2) (height 0.8))))
-          ((?^) (overlay-put ov2 'display '((raise 0.2) (height 0.8))))))))
+          ((?_) (overlay-put ov2 'display
+                             `((raise ,(- raise-base 0.2)) (height ,(* height-base 0.8)))))
+          ((?^) (overlay-put ov2 'display
+                             `((raise ,(+ raise-base 0.2)) (height ,(* height-base 0.8)))))))))
   ;; prettify symbols
   (dolist (symbol ml/symbols)
     (save-excursion
       (let ((regex (car symbol)))
         (while (ignore-errors (ml/search-regexp regex end nil t))
-          (let* ((ov (catch 'found
-                       (dolist (ov (overlays-at (match-beginning 0)))
-                         (when (eq (overlay-get ov 'category) 'ml/ov-pretty)
-                           (throw 'found ov)))))
-                 (oldprop (and ov (overlay-get ov 'display))))
+          (let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
+                 (oldprop (and oldov (overlay-get oldov 'display))))
             (unless (stringp oldprop)
               (ml/make-pretty-overlay
                (match-beginning 0) (match-end 0) 'priority 1
