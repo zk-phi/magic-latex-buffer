@@ -746,10 +746,12 @@ the command name."
              (delim-end (match-end 0))
              (oldov (ml/overlay-at body-beg 'category 'ml/ov-pretty))
              (oldprop (and oldov (overlay-get oldov 'display)))
+             (priority-base (and oldov (or (overlay-get oldov 'priority) 0)))
              (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
              (height-base (or (cadr (assoc 'height oldprop)) 1.0))
              (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
-             (ov2 (ml/make-pretty-overlay body-beg body-end)))
+             (ov2 (ml/make-pretty-overlay
+                   body-beg body-end 'priority (when oldov (1+ priority-base)))))
         (cl-case (string-to-char (match-string 0))
           ((?_) (overlay-put ov2 'display
                              `((raise ,(- raise-base 0.2)) (height ,(* height-base 0.8)))))
@@ -761,10 +763,12 @@ the command name."
       (let ((regex (car symbol)))
         (while (ignore-errors (ml/search-regexp regex end nil t))
           (let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
+                 (priority-base (and oldov (or (overlay-get oldov 'priority) 1)))
                  (oldprop (and oldov (overlay-get oldov 'display))))
             (unless (stringp oldprop)
               (ml/make-pretty-overlay
-               (match-beginning 0) (match-end 0) 'priority 1
+               (match-beginning 0) (match-end 0)
+               'priority (when oldov (1+ priority-base))
                'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
 
 ;; + activate
