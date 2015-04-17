@@ -86,8 +86,8 @@ character composition."
   (let ((st (copy-syntax-table tex-mode-syntax-table)))
     (modify-syntax-entry ?$ "\"" st)
     st)
-  "like `tex-mode-syntax-table' but treat $ as a string quote for
-correct inline-math recognition.")
+  "like `tex-mode-syntax-table' but treat $ as a string quote,
+for correct inline-math recognition.")
 
 (defvar-local ml/jit-point nil
   "store the point while font-locking")
@@ -174,14 +174,13 @@ correct inline-math recognition.")
 ;;   + general
 
 (defmacro ml/safe-excursion (&rest body)
-  "like `progn' but moves the point only when BODY succeeded with
-no errors."
+  "Like `progn' but moves the point only when BODY succeeded."
   `(let ((pos (point)))
      (condition-case err (progn ,@body)
        (error (goto-char pos) (error (error-message-string err))))))
 
 (defun ml/regexp-opt (strings)
-  "like regexp-opt but for LaTeX command names."
+  "Like `regexp-opt' but for LaTeX command names."
   (concat "\\\\" (regexp-opt strings) "\\>"))
 
 (defun ml/overlay-at (point prop val)
@@ -197,7 +196,7 @@ priority is returned. If there's no such overlays, return nil."
 ;;   + LaTeX-specific
 
 (defun ml/skip-comments-and-verbs (&optional backward)
-  "skip this comment or verbish environment"
+  "Skip forward this comment or verbish environment."
   (when (and (not (eobp))             ; return non-nil only when moved
              (memq (get-text-property (point) 'face)
                    magic-latex-ignored-properties)
@@ -211,9 +210,10 @@ priority is returned. If there's no such overlays, return nil."
       t)))
 
 (defun ml/search-regexp (regex &optional bound backward point-safe)
-  "like search-regexp but aware of escaped chars, comments and
-verbish environments. raises errors on failure. when POINT-SAFE
-is non-nil, the point must not be in the matching string."
+  "Like `search-regexp' but skips escaped chars, comments and
+verbish environments. This function raise an error on
+failure. When POINT-SAFE is non-nil, the point must not be in the
+matching string."
   (ml/safe-excursion
    (let ((case-fold-search nil))
      (if backward
@@ -230,7 +230,7 @@ is non-nil, the point must not be in the matching string."
        (ml/search-regexp regex bound backward point-safe))))
 
 (defun ml/skip-blocks (n &optional exclusive backward brace-only)
-  "skip blocks until the point reaches n-level upwards.
+  "Skip blocks forward until the point reaches n-level upwards.
 examples:
  [n=1]
    inclusive (a b (|c d (e f) g) h) -> (a b (c d (e f) g)| h)
@@ -265,9 +265,9 @@ examples:
             t)))))
 
 (defun ml/read-args (&optional option args)
-  "read something like \"[OPT]{ARG0}...{ARGn}}\" and
-set (match-string k) to ARGk. this function does not moves the
-point."
+  "Look forward something like \"[OPT]{ARG0}...{ARGn}}\" and
+set (match-string k) to K-th ARG. this function does not moves
+the point."
   (while (and option (looking-at " *\\["))
     (ml/skip-blocks 0))
   (when args
@@ -285,16 +285,16 @@ point."
 ;; + basic keyword highlighting via font-lock
 
 (defun ml/command-matcher (name &optional option args point-safe)
-  "generate a forward search command that matches something like
+  "Generate a forward search function that matches something like
 \"\\NAME[OPT]{ARG1}...{ARGn}\" and moves the cursor just after
 the NAME. (match-string 0) will be NAME and (match-string k) will
-be ARGk if succeeded."
+be K-th ARG if succeeded."
   `(lambda (&optional limit)
      (ignore-errors
        (ml/search-command ,name ,option ,args ,point-safe limit))))
 
 (defun ml/search-command (regex &optional option args point-safe limit)
-  "an internal function for `ml/command-matcher'"
+  "(Internal function for `ml/command-matcher')"
   (ml/safe-excursion
    (ml/search-regexp regex limit nil point-safe)
    (let ((beg (match-beginning 0))
@@ -343,7 +343,7 @@ be ARGk if succeeded."
       (,includes 1 font-lock-constant-face)
       (,verbish 1 'tex-verbatim)
       (,definitions 1 font-lock-function-name-face)))
-  "highlighting keywords based on `tex-font-lock-keywords-1'")
+  "Highlighting keywords based on `tex-font-lock-keywords-1'.")
 
 (defconst ml/keywords-2
   (let ((bold
@@ -378,7 +378,7 @@ be ARGk if succeeded."
       (,specials-1 . font-lock-warning-face)
       (,specials-2 . font-lock-warning-face)
       (,other-commands . font-lock-keyword-face)))
-  "highlighting keywords based on `tex-font-lock-keywords-2'")
+  "Highlighting keywords based on `tex-font-lock-keywords-2'.")
 
 (defconst ml/keywords-3
   (let ((title (ml/command-matcher "\\\\title\\>\\*?" nil 1))
@@ -414,24 +414,26 @@ be ARGk if succeeded."
                         ((string= str "yellow") 'ml/yellow))) append)
       (,type 1 'ml/type append)
       (,box 1 'ml/box append)))
-  "extra highlighting keywords")
+  "Extra highlighting keywords.")
 
 (defconst ml/keywords
-  (append ml/keywords-1 ml/keywords-2 ml/keywords-3))
+  (append ml/keywords-1 ml/keywords-2 ml/keywords-3)
+  "Font lock keywords for `latex-mode' buffers.")
 
 ;; + block highlighter
 
 (defun ml/block-matcher (name &optional option args point-safe)
-  "generate a forward search command that matches something like
+  "Generate a forward search function that matches something like
 \"\\begin{env} \\NAME[OPT]{ARG1}...{ARGn} ... BODY
 ... \\end{env}\" and moves the cursor just after the
 NAME. (match-string 0) will be NAME, (match-string 1) will be
-BODY, and (match-string (1+ k)) will be ARGk if succeeded."
+BODY, and (match-string (1+ k)) will be K-th ARG if succeeded."
   `(lambda (&optional limit)
      (ignore-errors
        (ml/search-block ,name ,option ,args ,point-safe limit))))
 
 (defun ml/search-block (regex &optional option args point-safe limit)
+  "(Internal function for `ml/block-matcher')"
   (ml/safe-excursion
    (ml/search-regexp regex limit nil point-safe)
    (let ((command-beg (match-beginning 0))
@@ -486,15 +488,19 @@ BODY, and (match-string (1+ k)) will be ARGk if succeeded."
                         ((string= col "cyan") 'ml/cyan)
                         ((string= col "magenta") 'ml/magenta)
                         ((string= col "yellow") 'ml/yellow))))))
-  "an alist of (MATCHER . FACE). MATCHER is a function that takes
+  "An alist of (MATCHER . FACE). MATCHER is a function that takes
 an argument, limit of the search, and does a forward search like
 `search-forward-regexp' then sets match-data properly. FACE is *a
 sexp* which is evaluated to a face. (match-string 1) will be
 propertized with the face.")
 
-(defun ml/make-block-overlay (com-from com-to hlt-from hlt-to &rest props)
-  (let* ((ov1 (make-overlay com-from com-to))
-         (ov2 (make-overlay hlt-from hlt-to))
+(defun ml/make-block-overlay (command-beg command-end body-beg body-end &rest props)
+  "Make a pair of overlays, a block overlay and a command
+overlay. The command overlay will have `partner' property that
+points the block overlay which the command is associated
+with. The block overlay will have PROPS as its properties."
+  (let* ((ov1 (make-overlay command-beg command-end))
+         (ov2 (make-overlay body-beg body-end))
          (hooks (list (lambda (ov goahead from to &optional len)
                         (when goahead
                           (move-overlay ov
@@ -510,6 +516,9 @@ propertized with the face.")
     ov2))
 
 (defun ml/remove-block-overlays (beg end)
+  "Remove all command overlays from BEG END created with
+`ml/make-block-overlay', and block overlays the command overlays
+are associated with."
   (dolist (ov (overlays-in beg end))
     (when (eq (overlay-get ov 'category) 'ml/ov-block)
       (delete-overlay (overlay-get ov 'partner))
@@ -736,6 +745,9 @@ propertized with the face.")
           ml/accents))
 
 (defun ml/make-pretty-overlay (from to &rest props)
+  "Make an overlay from FROM to TO, that has PROPS as its
+properties. The overlay is removed as soon as the text between
+FROM and TO is modified."
   (let* ((ov (make-overlay from to))
          (hooks (list `(lambda (&rest _) (delete-overlay ,ov)))))
     (overlay-put ov 'category 'ml/ov-pretty)
@@ -747,10 +759,12 @@ propertized with the face.")
     ov))
 
 (defun ml/remove-pretty-overlays (beg end)
+  "Remove all overlays created with `ml/make-pretty-overlay'
+between BEG and END."
   (remove-overlays beg end 'category 'ml/ov-pretty))
 
 (defun ml/search-suscript (point-safe limit)
-  "search forward something like \"^{BODY}\" or \"_{BODY}\" and
+  "Search forward something like \"^{BODY}\" or \"_{BODY}\" and
 set (match-string 0) to \"_\" or \"^\", (match-string 1) to
 \"{BODY}\". when POINT-SAFE is non-nil, the point must not be in
 the command name."
