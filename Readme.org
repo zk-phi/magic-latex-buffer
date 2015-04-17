@@ -34,3 +34,7 @@ latex-mode-buffer. If you want to enable highlighting automatically,
 add the function to the mode hook.
 
 : (add-hook 'latex-mode-hook 'magic-latex-buffer)
+
+** Known Issues
+
+- Not perfectly compatible with =multiple-cursors=
