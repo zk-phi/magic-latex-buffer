@@ -35,6 +35,14 @@ add the function to the mode hook.
 
 : (add-hook 'latex-mode-hook 'magic-latex-buffer)
 
+** Customizations
+
+You can disable some features independently.
+
+: (setq magic-latex-enable-block-highlight t
+:       magic-latex-enable-suscript        t
+:       magic-latex-enable-pretty-symbols  t)
+
 ** Known Issues
 
 - Not perfectly compatible with =multiple-cursors=

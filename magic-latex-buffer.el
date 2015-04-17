@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 0.1.1
+;; Version: 0.2.0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
 ;;; Commentary:
@@ -40,6 +40,7 @@
 ;; 0.0.0 test release
 ;; 0.1.0 add highlights, fix fatal bugs
 ;; 0.1.1 implement nested sub/super-scripts
+;; 0.2.0 add option to disable some prettifiers
 
 ;;; Code:
 
@@ -49,7 +50,7 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-buffer-version "0.1.1")
+(defconst magic-latex-buffer-version "0.2.0")
 
 ;; + customizable vars
 
@@ -62,7 +63,21 @@
     font-lock-comment-delimiter-face
     font-lock-constant-face
     tex-verbatim)
-  "list of faces which magic-latex should ignore"
+  "List of faces which magic-latex should ignore."
+  :group 'magic-latex-buffer)
+
+(defcustom magic-latex-enable-block-highlight t
+  "When non-nil, prettify blocks like \"{\\large ...}\"."
+  :group 'magic-latex-buffer)
+
+(defcustom magic-latex-enable-suscript t
+  "When non-nil, prettify subscripts and superscripts like
+  \"a_1\", \"e^{-x}\"."
+  :group 'magic-latex-buffer)
+
+(defcustom magic-latex-enable-pretty-symbols t
+  "When non-nil, prettify symbols with unicode characters and
+character composition."
   :group 'magic-latex-buffer)
 
 ;; + vars, consts
@@ -243,7 +258,7 @@ point."
       (set-match-data res)
       res)))
 
-;; + keyword highlighting via font-lock
+;; + basic keyword highlighting via font-lock
 
 (defun ml/command-matcher (name &optional option args point-safe)
   "generate a forward search command that matches something like
@@ -380,7 +395,7 @@ be ARGk if succeeded."
 (defconst ml/keywords
   (append ml/keywords-1 ml/keywords-2 ml/keywords-3))
 
-;; + block highlighting
+;; + block highlighter
 
 (defun ml/block-matcher (name &optional option args point-safe)
   "generate a forward search command that matches something like
@@ -481,13 +496,14 @@ propertized with the face.")
       (progn (ml/skip-blocks 1 nil t) (point))
     (error (goto-char 1)))
   (ml/remove-block-overlays (point) end)
-  (dolist (command ml/block-commands)
-    (save-excursion
-      (let ((regexp (car command)))
-        (while (funcall regexp end)
-          (ml/make-block-overlay (match-beginning 0) (match-end 0)
-                                 (match-beginning 1) (match-end 1)
-                                 'face (eval (cdr command))))))))
+  (when magic-latex-enable-block-highlight
+    (dolist (command ml/block-commands)
+      (save-excursion
+        (let ((regexp (car command)))
+          (while (funcall regexp end)
+            (ml/make-block-overlay (match-beginning 0) (match-end 0)
+                                   (match-beginning 1) (match-end 1)
+                                   'face (eval (cdr command)))))))))
 
 ;; + pretty symbol/suscript
 
@@ -739,38 +755,42 @@ the command name."
   (goto-char beg)
   (ml/remove-pretty-overlays beg end)
   ;; prettify suscripts
-  (save-excursion
-    (while (ignore-errors (ml/search-suscript t end))
-      (let* ((body-beg (match-beginning 1))
-             (body-end (match-end 1))
-             (delim-beg (match-beginning 0))
-             (delim-end (match-end 0))
-             (oldov (ml/overlay-at body-beg 'category 'ml/ov-pretty))
-             (oldprop (and oldov (overlay-get oldov 'display)))
-             (priority-base (and oldov (or (overlay-get oldov 'priority) 0)))
-             (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
-             (height-base (or (cadr (assoc 'height oldprop)) 1.0))
-             (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
-             (ov2 (ml/make-pretty-overlay
-                   body-beg body-end 'priority (when oldov (1+ priority-base)))))
-        (cl-case (string-to-char (match-string 0))
-          ((?_) (overlay-put ov2 'display
-                             `((raise ,(- raise-base 0.2)) (height ,(* height-base 0.8)))))
-          ((?^) (overlay-put ov2 'display
-                             `((raise ,(+ raise-base 0.2)) (height ,(* height-base 0.8)))))))))
-  ;; prettify symbols
-  (dolist (symbol ml/symbols)
+  (when magic-latex-enable-suscript
     (save-excursion
-      (let ((regex (car symbol)))
-        (while (ignore-errors (ml/search-regexp regex end nil t))
-          (let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
-                 (priority-base (and oldov (or (overlay-get oldov 'priority) 1)))
-                 (oldprop (and oldov (overlay-get oldov 'display))))
-            (unless (stringp oldprop)
-              (ml/make-pretty-overlay
-               (match-beginning 0) (match-end 0)
-               'priority (when oldov (1+ priority-base))
-               'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))
+      (while (ignore-errors (ml/search-suscript t end))
+        (let* ((body-beg (match-beginning 1))
+               (body-end (match-end 1))
+               (delim-beg (match-beginning 0))
+               (delim-end (match-end 0))
+               (oldov (ml/overlay-at body-beg 'category 'ml/ov-pretty))
+               (oldprop (and oldov (overlay-get oldov 'display)))
+               (priority-base (and oldov (or (overlay-get oldov 'priority) 0)))
+               (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
+               (height-base (or (cadr (assoc 'height oldprop)) 1.0))
+               (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
+               (ov2 (ml/make-pretty-overlay
+                     body-beg body-end 'priority (when oldov (1+ priority-base)))))
+          (cl-case (string-to-char (match-string 0))
+            ((?_) (overlay-put
+                   ov2 'display
+                   `((raise ,(- raise-base 0.2)) (height ,(* height-base 0.8)))))
+            ((?^) (overlay-put
+                   ov2 'display
+                   `((raise ,(+ raise-base 0.2)) (height ,(* height-base 0.8))))))))))
+  ;; prettify symbols
+  (when magic-latex-enable-pretty-symbols
+    (dolist (symbol ml/symbols)
+      (save-excursion
+        (let ((regex (car symbol)))
+          (while (ignore-errors (ml/search-regexp regex end nil t))
+            (let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
+                   (priority-base (and oldov (or (overlay-get oldov 'priority) 1)))
+                   (oldprop (and oldov (overlay-get oldov 'display))))
+              (unless (stringp oldprop)
+                (ml/make-pretty-overlay
+                 (match-beginning 0) (match-end 0)
+                 'priority (when oldov (1+ priority-base))
+                 'display (propertize (eval (cdr symbol)) 'display oldprop))))))))))
 
 ;; + activate
 
