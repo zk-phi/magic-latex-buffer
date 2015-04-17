@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
 ;;; Commentary:
@@ -39,6 +39,7 @@
 ;;; Change Log:
 ;; 0.0.0 test release
 ;; 0.1.0 add highlights, fix fatal bugs
+;; 0.1.1 implement nested sub/super-scripts
 
 ;;; Code:
 
@@ -48,7 +49,7 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-buffer-version "0.1.0")
+(defconst magic-latex-buffer-version "0.1.1")
 
 ;; + customizable vars
 
