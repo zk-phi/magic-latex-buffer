@@ -95,56 +95,80 @@ correct inline-math recognition.")
 ;; + faces
 
 (defface ml/title '((t (:inherit font-lock-function-name-face :height 2.0)))
-  "Face used for title command in magic LaTeX buffers.")
+  "Face used for title command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/chapter '((t (:inherit font-lock-function-name-face :height 1.8)))
-  "Face used for chapter command in magic LaTeX buffers.")
+  "Face used for chapter command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/section '((t (:inherit font-lock-function-name-face :height 1.6)))
-  "Face used for section command in magic LaTeX buffers.")
+  "Face used for section command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/subsection '((t (:inherit font-lock-function-name-face :height 1.2)))
-  "Face used for subsection command in magic LaTeX buffers.")
+  "Face used for subsection command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 
 (defface ml/box '((t (:box t)))
-  "Face used for box command in magic LaTeX buffers.")
+  "Face used for box command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/overline '((t (:overline t)))
-  "Face used for overline command in magic LaTeX buffers.")
+  "Face used for overline command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/type '((t (:inherit 'fixed-pitch)))
-  "Face used for type command in magic LaTeX buffers.")
+  "Face used for type command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 
 (defface ml/black '((t (:foreground "black")))
-  "Face used for color{black} command in magic LaTeX buffers.")
+  "Face used for color{black} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/white '((t (:foreground "white")))
-  "Face used for color{white} command in magic LaTeX buffers.")
+  "Face used for color{white} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/red '((t (:foreground "red")))
-  "Face used for color{red} command in magic LaTeX buffers.")
+  "Face used for color{red} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/green '((t (:foreground "green")))
-  "Face used for color{green} command in magic LaTeX buffers.")
+  "Face used for color{green} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/blue '((t (:foreground "blue")))
-  "Face used for color{blue} command in magic LaTeX buffers.")
+  "Face used for color{blue} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/cyan '((t (:foreground "cyan")))
-  "Face used for color{cyan} command in magic LaTeX buffers.")
+  "Face used for color{cyan} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/magenta '((t (:foreground "magenta")))
-  "Face used for color{magenta} command in magic LaTeX buffers.")
+  "Face used for color{magenta} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/yellow '((t (:foreground "yellow")))
-  "Face used for color{yellow} command in magic LaTeX buffers.")
+  "Face used for color{yellow} command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 
 (defface ml/tiny '((t (:height 0.7)))
-  "Face used for tiny command in magic LaTeX buffers.")
+  "Face used for tiny command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/script '((t (:height 0.8)))
-  "Face used for script command in magic LaTeX buffers.")
+  "Face used for script command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/footnote '((t (:height 0.8)))
-  "Face used for footnote command in magic LaTeX buffers.")
+  "Face used for footnote command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/small '((t (:height 0.9)))
-  "Face used for small command in magic LaTeX buffers.")
+  "Face used for small command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/large '((t (:height 1.2)))
-  "Face used for large command in magic LaTeX buffers.")
+  "Face used for large command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/llarge '((t (:height 1.44)))
-  "Face used for Large command in magic LaTeX buffers.")
+  "Face used for Large command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/xlarge '((t (:height 1.72)))
-  "Face used for LARGE command in magic LaTeX buffers.")
+  "Face used for LARGE command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/huge '((t (:height 2.07)))
-  "Face used for huge command in magic LaTeX buffers.")
+  "Face used for huge command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 (defface ml/hhuge '((t (:height 2.49)))
-  "Face used for Huge command in magic LaTeX buffers.")
+  "Face used for Huge command in magic LaTeX buffers."
+  :group 'magic-latex-buffer)
 
 ;; + utilities
 ;;   + general
