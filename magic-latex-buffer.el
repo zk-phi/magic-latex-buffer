@@ -91,6 +91,9 @@ for correct inline-math recognition.")
 
 (defvar-local ml/jit-point nil
   "store the point while font-locking")
+(defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
+  (let ((ml/jit-point (point)))
+    ad-do-it))
 
 ;; + faces
 
@@ -665,8 +668,9 @@ are associated with."
     ("\\\\\\(?:text\\)?backslash\\>" . "＼")
     ("\\\\bigcirc\\>" . "○") ("\\\\circ\\>" . "ｏ")
     ("\\\\bullet\\>" . "●") ("\\\\diamond\\>" . "◇")
-    ("\\\\bowtie\\>" . "⋈")
-    ("\\\\star\\>" . "⋆") ("\\\\S\\>" . "§")
+    ("\\\\bowtie\\>" . "⋈") ("\\\\qed\\>" . "□")
+    ("\\\\lightning\\>" . "Ϟ")
+    ("\\\\star\\>" . "★") ("\\\\S\\>" . "§")
     ("\\\\dag\\(?:ger\\)?\\>" . "†") ("\\\\ddag\\(?:ger\\)?\\>" . "‡")
     ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
     ("\\\\texttrademark\\>" . "™")
@@ -861,10 +865,6 @@ the command name."
     (ml/remove-pretty-overlays (point-min) (point-max))
     (font-lock-refresh-defaults)
     (iimage-mode -1)))
-
-(defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
-  (let ((ml/jit-point (point)))
-    ad-do-it))
 
 ;; + provide
 
