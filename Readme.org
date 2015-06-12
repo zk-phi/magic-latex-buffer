@@ -24,12 +24,15 @@ LaTeX-mode のシンタックスハイライトを激しく
 
 ** Installation
 
-Put magic-latex-buffer.el into a "load-path"ed directory, and load it in your
-init file.
+1. Install an unicode font with many math symbols (eg. Symbolas,
+   Unifont, etc).
 
-: (require 'magic-latex-buffer)
+2. Put magic-latex-buffer.el into a "load-path"ed directory, and load
+   it in your init file:
 
-Then you can enable highlighting with =M-x magic-latex-buffer= in a
+   : (require 'magic-latex-buffer)
+
+You can enable highlighting with =M-x magic-latex-buffer= in a
 latex-mode-buffer. If you want to enable highlighting automatically,
 add the function to the mode hook.
 
