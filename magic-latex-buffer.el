@@ -631,6 +631,14 @@ are associated with."
     ("\\\\uparrow\\>" . "↑") ("\\\\downarrow\\>" . "↓") ("\\\\updownarrow\\>" . "↕")
     ("\\\\upuparrows\\>" . "⇈") ("\\\\downdownarrows\\>" . "⇊")
     ("\\\\Uparrow\\>" . "⇑") ("\\\\Downarrow\\>" . "⇓") ("\\\\Updownarrow\\>" . "⇕")
+    ;; 45deg
+    ("\\\\nearrow\\>" . "↗") ("\\\\searrow\\>" . "↘")
+    ("\\\\nwarrow\\>" . "↖") ("\\\\swarrow\\>" . "↙")
+    ;; long
+    ("\\\\longrightarrow\\>" . "⟶") ("\\\\longleftarrow\\>" . "⟵")
+    ("\\\\Longrightarrow\\>" . "⟹") ("\\\\Longleftarrow\\>" . "⟸")
+    ("\\\\longmapsto\\>" . "⟼")
+    ("\\\\longleftrightarrow\\>" . "⟷") ("\\\\Longleftrightarrow\\>" . "⟺")
     ;; others
     ("\\\\hookleftarrow\\>" . "↩") ("\\\\hookrightarrow\\>" . "↪")
     ("\\\\twoheadleftarrow\\>" . "↞") ("\\\\twoheadrightarrow\\>" . "↠")
