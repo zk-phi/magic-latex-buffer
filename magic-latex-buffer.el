@@ -561,7 +561,7 @@ are associated with."
 (defconst ml/relation-symbols
   '(
     ;; basic
-    ("\\\\eq\\>" . "＝") ("\\\\equiv\\>" . "≡")
+    ("\\\\eq\\>" . "＝") ("\\\\doteq\\>" . "≐") ("\\\\equiv\\>" . "≡")
     ("\\\\sim\\>" . "～") ("\\\\simeq\\>" . "≃") ("\\\\cong\\>" . "≅")
     ("\\\\approx\\>" . "≒")
     ("\\\\asymp\\>" . "≍")
@@ -575,7 +575,8 @@ are associated with."
     ("\\\\in\\>" . "∈") ("\\\\ni\\>" . "∋")
     ("\\\\sqsubseteq\\>" . "⊑") ("\\\\sqsupseteq\\>" . "⊒")
     ;; logic
-    ("\\\\models\\>" . "⊧") ("\\\\vdash\\>" . "⊢") ("\\\\dashv\\>" . "⊣")
+    ("\\\\models\\>" . "⊧") ("\\\\vDash\\>" . "⊨")
+    ("\\\\vdash\\>" . "⊢") ("\\\\dashv\\>" . "⊣")
     ("\\\\rightarrow\\>" . "→") ("\\\\leftarrow\\>" . "←")
     ("\\\\leftrightarrow\\>" . "↔") ("\\\\Leftarrow\\>" . "⇐")
     ("\\\\Rightarrow\\>" . "⇒") ("\\\\Leftrightarrow\\>" . "⇔")
@@ -715,13 +716,16 @@ are associated with."
     ("\\\\therefore\\>" . "∴") ("\\\\because\\>" . "∵")
     ("\\\\infty\\>" . "∞") ("\\\\nabla\\>" . "∇") ("\\\\triangle\\>" . "△")
 
+    ;; music (?)
+    ("\\\\flat\\>" . "♭") ("\\\\natural\\>" . "♮") ("\\\\sharp\\>" . "＃")
+
     ;; others
     ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
     ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
     ("\\\\\\(?:text\\)?backslash\\>" . "＼")
     ("\\\\bigcirc\\>" . "○") ("\\\\circ\\>" . "ｏ")
-    ("\\\\bullet\\>" . "●") ("\\\\diamond\\>" . "◇")
-    ("\\\\bowtie\\>" . "⋈") ("\\\\qed\\>" . "□")
+    ("\\\\bullet\\>" . "●") ("\\\\[Dd]iamond\\>" . "◇")
+    ("\\\\bowtie\\>" . "⋈") ("\\\\\\(?:qed\\|Box\\)\\>" . "□")
     ("\\\\lightning\\>" . "Ϟ")
     ("\\\\star\\>" . "★") ("\\\\S\\>" . "§")
     ("\\\\dag\\(?:ger\\)?\\>" . "†") ("\\\\ddag\\(?:ger\\)?\\>" . "‡")
