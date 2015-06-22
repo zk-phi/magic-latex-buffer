@@ -583,6 +583,7 @@ are associated with."
     ("\\\\parallel\\>" . "∥") ("\\\\perp\\>" . "⊥")
     ))
 
+;; Use composition so that it matches with \not command
 (defconst ml/negrel-symbols
   '(("\\\\neq\\>" . (compose-chars ?／ ?＝))
     ("\\\\notin\\>" . (compose-chars ?／ ?∈))
@@ -591,21 +592,22 @@ are associated with."
 (defconst ml/operator-symbols
   '(
     ;; set
-    ("\\\\mid\\>" . "｜") ("\\\\emptyset\\>" . "∅") ("\\\\\\(?:set\\)?minus\\>" . "＼")
+    ("\\\\mid\\>" . "｜") ("\\\\\\(?:set\\)?minus\\>" . "＼")
     ("\\\\\\(?:big\\)?cup\\>" . "∪") ("\\\\\\(?:big\\)?cap\\>" . "∩")
-    ("\\\\uplus" . (compose-chars ?∪ ?＋))
-    ("\\\\sqcup\\>" . "⊔") ("\\\\sqcap\\>" . "⊓")
+    ("\\\\\\(?:big\\)?sqcup\\>" . "⊔") ("\\\\\\(?:big\\)?sqcap\\>" . "⊓")
+    ("\\\\\\(?:big\\)?uplus\\>" . "⨄")
     ;; logic
     ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\\\(?:neg\\|lnot\\)\\>" . "￢")
     ("\\\\land\\>" . "∧") ("\\\\lor\\>" . "∨")
     ;; algebra
     ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
     ("\\\\\\(?:big\\)?wedge\\>" . "∧") ("\\\\\\(?:big\\)?vee\\>" . "∨")
-    ("\\\\prod\\>" . "∏") ("\\\\sum\\>" . "∑")
+    ("\\\\prod\\>" . "∏") ("\\\\coprod\\>" . "∐") ("\\\\sum\\>" . "∑")
     ("\\\\triangleleft\\>" . "◁") ("\\\\triangleright\\>" . "▷")
     ("\\\\bigtriangleup\\>" . "△") ("\\\\bigtriangledown\\>" . "▽")
-    ("\\\\odot\\>" . "⊙") ("\\\\oslash\\>" . "⊘") ("\\\\otimes\\>" . "⊗")
-    ("\\\\ominus\\>" . "⊖") ("\\\\oplus\\>" . "⊕") ("\\\\ast\\>" . "∗")
+    ("\\\\\\(?:big\\)?odot\\>" . "⊙") ("\\\\oslash\\>" . "⊘")
+    ("\\\\\\(?:big\\)?otimes\\>" . "⊗") ("\\\\\\(?:big\\)?oplus\\>" . "⊕")
+    ("\\\\ominus\\>" . "⊖") ("\\\\ast\\>" . "∗")
     ;; analysis
     ("\\\\mp\\>" . "∓") ("\\\\pm\\>" . "±")
     ("\\\\Re\\>" . "ℜ") ("\\\\Im\\>" . "ℑ") ("\\\\angle\\>" . "∠")
@@ -658,23 +660,8 @@ are associated with."
     ("\\\\ss\\>" . "ß") ("\\\\aa\\>" . "å") ("\\\\AA\\>" . "Å")
     ("\\\\ae\\>" . "æ") ("\\\\oe\\>" . "œ") ("\\\\AE\\>" . "Æ") ("\\\\OE\\>" . "Œ")
     ("\\\\o\\>" . "ø") ("\\\\O\\>" . "Ø")
-    ;; math
-    ("\\\\aleph\\>" . "ℵ") ("\\\\bot\\>" . "⊥") ("\\\\top\\>" . "⊤")
-    ("\\\\therefore\\>" . "∴") ("\\\\because\\>" . "∵")
-    ("\\\\infty\\>" . "∞") ("\\\\nabla\\>" . "∇") ("\\\\triangle\\>" . "△")
     ;; others
-    ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
-    ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
-    ("\\\\\\(?:text\\)?backslash\\>" . "＼")
-    ("\\\\bigcirc\\>" . "○") ("\\\\circ\\>" . "ｏ")
-    ("\\\\bullet\\>" . "●") ("\\\\diamond\\>" . "◇")
-    ("\\\\bowtie\\>" . "⋈") ("\\\\qed\\>" . "□")
-    ("\\\\lightning\\>" . "Ϟ")
-    ("\\\\star\\>" . "★") ("\\\\S\\>" . "§")
-    ("\\\\dag\\(?:ger\\)?\\>" . "†") ("\\\\ddag\\(?:ger\\)?\\>" . "‡")
-    ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
-    ("\\\\texttrademark\\>" . "™")
-    ("\\\\pounds\\>"  . "£") ("\\\\P\\>" . "¶")
+    ("\\\\aleph\\>" . "ℵ")
     ))
 
 (defconst ml/other-symbols
@@ -688,11 +675,15 @@ are associated with."
     ("~\\|\\\\\\(?:[,;\s]\\|\\(?:hs\\(?:pace\\|kip\\)\\|q?quad\\)\\>\\)" . "␣")
     ("\\\\\\(?:newline\\>\\|\\\\\\)" . "⏎")
     ("\\\\multicolumn\\>" . "|↔|")
-    ("\\\\TeX\\>"
-     . (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X))
-    ("\\\\LaTeX\\>"
-     . (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
-                      ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X))
+    ("\\\\TeX\\>" . (compose-chars ?T '(cr cl -20 -45) ?E '(cr cl -20 24) ?X))
+    ("\\\\LaTeX\\>" . (compose-chars ?L '(cr cl -60 35) ?A '(cr cl -18 -20)
+                                     ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X))
+
+    ;; escaped symbols
+    ("\\\\\\$" . "＄") ("\\\\_" . "＿")
+    ;; alignment character (&)
+    ("&" . (compose-chars ?& ?|))
+
     ;; parens
     ("\\\\\\(?:{\\|lbrace\\>\\)" . "{")
     ("\\\\\\(?:}\\|rbrace\\>\\)" . "}")
@@ -706,10 +697,28 @@ are associated with."
     ("\\\\lgroup\\>" . "〔") ("\\\\rgroup" . "〕")
     ("\\\\langle\\>" . "〈") ("\\\\rangle\\>" . "〉")
     ("\\\\lfloor\\>" . "⌊") ("\\\\rfloor\\>" . "⌋")
-    ;; escaped symbols
-    ("\\\\\\$" . "＄") ("\\\\_" . "＿")
-    ;; "&"
-    ("&" . (compose-chars ?& ?|))))
+
+    ;; math
+    ("\\\\emptyset\\>" . "∅") ("\\\\bot\\>" . "⊥") ("\\\\top\\>" . "⊤")
+    ("\\\\therefore\\>" . "∴") ("\\\\because\\>" . "∵")
+    ("\\\\infty\\>" . "∞") ("\\\\nabla\\>" . "∇") ("\\\\triangle\\>" . "△")
+
+    ;; others
+    ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
+    ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
+    ("\\\\\\(?:text\\)?backslash\\>" . "＼")
+    ("\\\\bigcirc\\>" . "○") ("\\\\circ\\>" . "ｏ")
+    ("\\\\bullet\\>" . "●") ("\\\\diamond\\>" . "◇")
+    ("\\\\bowtie\\>" . "⋈") ("\\\\qed\\>" . "□")
+    ("\\\\lightning\\>" . "Ϟ")
+    ("\\\\star\\>" . "★") ("\\\\S\\>" . "§")
+    ("\\\\dag\\(?:ger\\)?\\>" . "†") ("\\\\ddag\\(?:ger\\)?\\>" . "‡")
+    ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
+    ("\\\\texttrademark\\>" . "™")
+    ("\\\\clubsuit\\>" . "♣") ("\\\\diamondsuit\\>" . "♦")
+    ("\\\\heartsuit\\>" . "♥") ("\\\\spadesuit\\>" . "♠")
+    ("\\\\pounds\\>"  . "£") ("\\\\P\\>" . "¶")
+    ))
 
 (defconst ml/accents
   `(("\\\\\\(?:mathbb\\){\\([^}]\\)}"
