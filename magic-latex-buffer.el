@@ -563,25 +563,35 @@ are associated with."
     ;; basic
     ("\\\\eq\\>" . "＝") ("\\\\doteq\\>" . "≐") ("\\\\equiv\\>" . "≡")
     ("\\\\sim\\>" . "～") ("\\\\simeq\\>" . "≃") ("\\\\cong\\>" . "≅")
+    ("\\\\succ\\>" . "≻") ("\\\\prec\\>" . "≺")
+    ("\\\\succeq\\>" . "≽") ("\\\\preceq\\>" . "≼")
     ("\\\\approx\\>" . "≒")
-    ("\\\\asymp\\>" . "≍")
     ("\\\\le\\(?:q\\)?\\>" . "≦") ("\\\\ge\\(?:q\\)?\\>" . "≧")
     ("\\\\ll\\>" . "≪") ("\\\\gg\\>" . "≫")
     ("\\\\to\\>" . "→") ("\\\\mapsto\\>" . "↦")
     ("\\\\propto\\>" . "∝")
+
     ;; set
     ("\\\\subseteq\\>" . "⊆") ("\\\\subset\\>" . "⊂")
     ("\\\\supseteq\\>" . "⊇") ("\\\\supset\\>" . "⊃")
     ("\\\\in\\>" . "∈") ("\\\\ni\\>" . "∋")
     ("\\\\sqsubseteq\\>" . "⊑") ("\\\\sqsupseteq\\>" . "⊒")
+
     ;; logic
     ("\\\\models\\>" . "⊧") ("\\\\vDash\\>" . "⊨")
     ("\\\\vdash\\>" . "⊢") ("\\\\dashv\\>" . "⊣")
     ("\\\\rightarrow\\>" . "→") ("\\\\leftarrow\\>" . "←")
     ("\\\\leftrightarrow\\>" . "↔") ("\\\\Leftarrow\\>" . "⇐")
     ("\\\\Rightarrow\\>" . "⇒") ("\\\\Leftrightarrow\\>" . "⇔")
+
     ;; geometry
     ("\\\\parallel\\>" . "∥") ("\\\\perp\\>" . "⊥")
+
+    ;; ???
+    ("\\\\asymp\\>" . "≍") ("\\\\smile\\>" . "⌣") ("\\\\frown\\>" . "⌢")
+    ("\\\\lhd//>" . "⊲") ("\\\\unlhd\\>" . "⊴")
+    ("\\\\rhd\\>" . "⊳") ("\\\\unrhd\\>" . "⊵")
+    ("\\\\\\(?:bowtie\\|Join\\)\\>" . "⋈")
     ))
 
 ;; Use composition so that it matches with \not command
@@ -596,19 +606,21 @@ are associated with."
     ("\\\\mid\\>" . "｜") ("\\\\\\(?:set\\)?minus\\>" . "＼")
     ("\\\\\\(?:big\\)?cup\\>" . "∪") ("\\\\\\(?:big\\)?cap\\>" . "∩")
     ("\\\\\\(?:big\\)?sqcup\\>" . "⊔") ("\\\\\\(?:big\\)?sqcap\\>" . "⊓")
-    ("\\\\\\(?:big\\)?uplus\\>" . "⨄")
+    ("\\\\\\(?:big\\)?uplus\\>" . "⨄") ("\\\\amalg\\>" . "⨿")
+
     ;; logic
     ("\\\\exists\\>" . "∃") ("\\\\forall\\>" . "∀") ("\\\\\\(?:neg\\|lnot\\)\\>" . "￢")
     ("\\\\land\\>" . "∧") ("\\\\lor\\>" . "∨")
+
     ;; algebra
-    ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
+    ("\\\\cdot\\>" . "・") ("\\\\times\\>" . "×") ("\\\\div)\\>" . "÷")
     ("\\\\\\(?:big\\)?wedge\\>" . "∧") ("\\\\\\(?:big\\)?vee\\>" . "∨")
     ("\\\\prod\\>" . "∏") ("\\\\coprod\\>" . "∐") ("\\\\sum\\>" . "∑")
-    ("\\\\triangleleft\\>" . "◁") ("\\\\triangleright\\>" . "▷")
-    ("\\\\bigtriangleup\\>" . "△") ("\\\\bigtriangledown\\>" . "▽")
+
     ("\\\\\\(?:big\\)?odot\\>" . "⊙") ("\\\\oslash\\>" . "⊘")
     ("\\\\\\(?:big\\)?otimes\\>" . "⊗") ("\\\\\\(?:big\\)?oplus\\>" . "⊕")
     ("\\\\ominus\\>" . "⊖") ("\\\\ast\\>" . "∗")
+
     ;; analysis
     ("\\\\mp\\>" . "∓") ("\\\\pm\\>" . "±")
     ("\\\\Re\\>" . "ℜ") ("\\\\Im\\>" . "ℑ") ("\\\\angle\\>" . "∠")
@@ -617,6 +629,15 @@ are associated with."
     ("\\\\oint\\>" . "∮")
     ("\\\\varlimsup\\>" . (propertize "lim" 'face 'ml/overline))
     ("\\\\varliminf\\>" . (propertize "lim" 'face 'underline))
+
+    ;; ???
+    ("\\\\wp\\>" . "≀")
+    ("\\\\bullet\\>" . "●")
+    ("\\\\circ\\>" . "ｏ") ("\\\\bigcirc\\>" . "○")
+    ("\\\\diamond\\>" . "♢") ("\\\\Diamond\\>" . "◇")
+    ("\\\\star\\>" . "★") ("\\\\triangle\\>" . "△")
+    ("\\\\triangleleft\\>" . "◁") ("\\\\triangleright\\>" . "▷")
+    ("\\\\bigtriangleup\\>" . "△") ("\\\\bigtriangledown\\>" . "▽")
     ))
 
 (defconst ml/arrow-symbols
@@ -627,18 +648,22 @@ are associated with."
     ("\\\\leftrightharpoons\\>" . "⇋") ("\\\\rightleftharpoons\\>" . "⇌")
     ("\\\\upharpoonleft\\>" . "↿") ("\\\\upharpoonright\\>" . "↾")
     ("\\\\downharpoonleft\\>" . "⇃") ("\\\\downharpoonright\\>" . "⇂")
-    ;; vertical
-    ("\\\\uparrow\\>" . "↑") ("\\\\downarrow\\>" . "↓") ("\\\\updownarrow\\>" . "↕")
-    ("\\\\upuparrows\\>" . "⇈") ("\\\\downdownarrows\\>" . "⇊")
-    ("\\\\Uparrow\\>" . "⇑") ("\\\\Downarrow\\>" . "⇓") ("\\\\Updownarrow\\>" . "⇕")
-    ;; 45deg
-    ("\\\\nearrow\\>" . "↗") ("\\\\searrow\\>" . "↘")
-    ("\\\\nwarrow\\>" . "↖") ("\\\\swarrow\\>" . "↙")
+
     ;; long
     ("\\\\longrightarrow\\>" . "⟶") ("\\\\longleftarrow\\>" . "⟵")
     ("\\\\Longrightarrow\\>" . "⟹") ("\\\\Longleftarrow\\>" . "⟸")
     ("\\\\longmapsto\\>" . "⟼")
     ("\\\\longleftrightarrow\\>" . "⟷") ("\\\\Longleftrightarrow\\>" . "⟺")
+
+    ;; 45deg
+    ("\\\\nearrow\\>" . "↗") ("\\\\searrow\\>" . "↘")
+    ("\\\\nwarrow\\>" . "↖") ("\\\\swarrow\\>" . "↙")
+
+    ;; 90deg
+    ("\\\\uparrow\\>" . "↑") ("\\\\downarrow\\>" . "↓") ("\\\\updownarrow\\>" . "↕")
+    ("\\\\upuparrows\\>" . "⇈") ("\\\\downdownarrows\\>" . "⇊")
+    ("\\\\Uparrow\\>" . "⇑") ("\\\\Downarrow\\>" . "⇓") ("\\\\Updownarrow\\>" . "⇕")
+
     ;; others
     ("\\\\hookleftarrow\\>" . "↩") ("\\\\hookrightarrow\\>" . "↪")
     ("\\\\twoheadleftarrow\\>" . "↞") ("\\\\twoheadrightarrow\\>" . "↠")
@@ -664,6 +689,7 @@ are associated with."
     ("\\\\Tau\\>" . "Τ") ("\\\\Upsilon\\>" . "Υ")
     ("\\\\Phi\\>" . "Φ") ("\\\\Chi\\>" . "Χ")
     ("\\\\Psi\\>" . "Ψ") ("\\\\Omega\\>" . "Ω")
+
     ;; greek (lower)
     ("\\\\alpha\\>" . "α") ("\\\\beta\\>" . "β")
     ("\\\\gamma\\>" . "γ") ("\\\\delta\\>" . "δ")
@@ -677,12 +703,16 @@ are associated with."
     ("\\\\tau\\>" . "τ") ("\\\\upsilon\\>" . "υ")
     ("\\\\\\(?:var\\)?phi\\>" . "φ") ("\\\\chi\\>" . "χ")
     ("\\\\psi\\>" . "ψ") ("\\\\omega\\>" . "ω")
+
     ;; latin / accented
     ("\\\\ss\\>" . "ß") ("\\\\aa\\>" . "å") ("\\\\AA\\>" . "Å")
     ("\\\\ae\\>" . "æ") ("\\\\oe\\>" . "œ") ("\\\\AE\\>" . "Æ") ("\\\\OE\\>" . "Œ")
     ("\\\\o\\>" . "ø") ("\\\\O\\>" . "Ø")
+
     ;; others
     ("\\\\aleph\\>" . "ℵ")
+    ("\\\\hbar\\>" . "ℏ") ("\\\\ell\\>" . "ℓ") ("\\\\wp\\>" . "℘")
+    ("\\\\l\\>" . "ł") ("\\\\L\\>" . "Ł") ("\\\\S\\>" . "§")
     ))
 
 (defconst ml/other-symbols
@@ -728,15 +758,10 @@ are associated with."
     ("\\\\flat\\>" . "♭") ("\\\\natural\\>" . "♮") ("\\\\sharp\\>" . "＃")
 
     ;; others
-    ("\\\\cdot\\>" . "・") ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
+    ("\\\\dots\\>" . "…") ("\\\\cdots\\>" . "⋯")
     ("\\\\vdots\\>" . "⋮") ("\\\\ddots\\>" . "⋱")
     ("\\\\\\(?:text\\)?backslash\\>" . "＼")
-    ("\\\\triangle\\>" . "△")
-    ("\\\\bigcirc\\>" . "○") ("\\\\circ\\>" . "ｏ")
-    ("\\\\bullet\\>" . "●") ("\\\\[Dd]iamond\\>" . "◇")
-    ("\\\\bowtie\\>" . "⋈") ("\\\\\\(?:qed\\|Box\\)\\>" . "□")
-    ("\\\\lightning\\>" . "Ϟ")
-    ("\\\\star\\>" . "★") ("\\\\S\\>" . "§")
+    ("\\\\\\(?:qed\\|Box\\)\\>" . "□") ("\\\\lightning\\>" . "Ϟ")
     ("\\\\dag\\(?:ger\\)?\\>" . "†") ("\\\\ddag\\(?:ger\\)?\\>" . "‡")
     ("\\\\copyright\\>" . "©") ("\\\\texistregistered\\?" . "®")
     ("\\\\texttrademark\\>" . "™")
@@ -764,6 +789,10 @@ are associated with."
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?\"))
     ("\\\\\\(?:grave\\|`\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 30) ?`))
+    ("\\\\\\(?:check\\|`\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?v))
+    ("\\\\\\(?:breve\\|`\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?⌣))
     ("\\\\r{\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?o))
     ))
