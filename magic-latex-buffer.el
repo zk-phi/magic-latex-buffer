@@ -706,8 +706,8 @@ are associated with."
     ("&" . (compose-chars ?& ?|))
 
     ;; parens
-    ("\\\\\\(?:{\\|lbrace\\>\\)" . "⎬")
-    ("\\\\\\(?:}\\|rbrace\\>\\)" . "⎨")
+    ("\\\\\\(?:{\\|lbrace\\>\\)" . "⎨")
+    ("\\\\\\(?:}\\|rbrace\\>\\)" . "⎬")
     ("\\\\|" . "║")
     ("\\\\lbrack\\>" . "[") ("\\\\rbrack\\>" . "]")
     ("\\\\\\(?:double\\[\\|lBrack\\>\\)"
@@ -884,8 +884,10 @@ the command name."
         (font-lock-add-keywords nil ml/keywords 'set)
         (jit-lock-register 'ml/jit-prettifier)
         (jit-lock-register 'ml/jit-block-highlighter)
-        ;; jit-lock highlighters assume that the region is already fontified
-        ;; (so that they can recognize verbatim, constant and comment)
+        ;; our prettifiers assume that the region is already fontified
+        ;; (to recognize verbatim environments, constants and
+        ;; comments), thus we need to push `font-lock-fontify-region'
+        ;; before our prettifiers.
         (jit-lock-register 'font-lock-fontify-region)
         (set (make-local-variable 'iimage-mode-image-regex-alist)
              `((,(concat "\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*"
