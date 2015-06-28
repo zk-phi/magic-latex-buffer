@@ -73,12 +73,12 @@
 
 (defcustom magic-latex-enable-block-align nil
   "[EXPERIMENTAL] When non-nil, align blocks like \"{\\centering
-  ...}\"."
+...}\"."
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-suscript t
   "When non-nil, prettify subscripts and superscripts like
-  \"a_1\", \"e^{-x}\"."
+\"a_1\", \"e^{-x}\"."
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-pretty-symbols t
@@ -548,6 +548,7 @@ like `search-forward-regexp' then sets match-data as
 needed. POSITION can be one of 'center 'right 'left.")
 
 ;; *FIXME* NOT EFFICIENT
+;; *FIXME* INCORRECT DISPLAY FOR NESTED ALIGNING BLOCKS
 ;; *FIXME* NEED REFACTORING
 (defun ml/make-align-overlay (command-beg command-end content-beg content-end position)
   "Make a command overlay and alignment overlay(s) like
