@@ -182,7 +182,7 @@ for correct inline-math recognition.")
      (condition-case err (progn ,@body)
        (error (goto-char pos) (error (error-message-string err))))))
 
-(defun ml/regexp-opt (strings)
+(defun ml/command-regexp-opt (strings)
   "Like `regexp-opt' but for LaTeX command names."
   (concat "\\\\" (regexp-opt strings) "\\>"))
 
@@ -199,7 +199,8 @@ priority is returned. If there's no such overlays, return nil."
 ;;   + LaTeX-specific
 
 (defun ml/skip-comments-and-verbs (&optional backward)
-  "Skip forward this comment or verbish environment."
+  "Skip forward this comment or verbish environment. Return
+non-nil iff the cursor is moved."
   (when (and (not (eobp))             ; return non-nil only when moved
              (memq (get-text-property (point) 'face)
                    magic-latex-ignored-properties)
@@ -279,7 +280,7 @@ the point."
         (unless (looking-at " *{")
           (error "too few arguments"))
         (push (match-end 0) res)
-        (ml/skip-blocks 0 nil nil "\\({\\)\\|\\(}\\)")
+        (ml/skip-blocks 0 nil nil t)
         (push (1- (point)) res))
       (setq res (reverse res))
       (set-match-data res)
@@ -287,14 +288,14 @@ the point."
 
 ;; + basic keyword highlighting via font-lock
 
-(defun ml/command-matcher (name &optional option args point-safe)
+(defun ml/command-matcher (regex &optional option args point-safe)
   "Generate a forward search function that matches something like
-\"\\NAME[OPT]{ARG1}...{ARGn}\" and moves the cursor just after
-the NAME. (match-string 0) will be NAME and (match-string k) will
-be K-th ARG if succeeded."
+\"REGEX[OPT]{ARG1}...{ARGn}\" and moves the cursor just after the
+NAME. (match-string 0) will be NAME and (match-string k) will be
+K-th ARG if succeeded."
   `(lambda (&optional limit)
      (ignore-errors
-       (ml/search-command ,name ,option ,args ,point-safe limit))))
+       (ml/search-command ,regex ,option ,args ,point-safe limit))))
 
 (defun ml/search-command (regex &optional option args point-safe limit)
   "(Internal function for `ml/command-matcher')"
@@ -303,19 +304,16 @@ be K-th ARG if succeeded."
    (let ((beg (match-beginning 0))
          (end (match-end 0)))
      (condition-case nil
-         (save-excursion
-           (let ((res (cons beg
-                            (cons end
-                                  (save-excursion
-                                    (ml/read-args option args))))))
-             (set-match-data res)
-             res))
+         (let* ((args (save-excursion (ml/read-args option args)))
+                (res (cons beg (cons end args))))
+           (set-match-data res)
+           res)
        (error (ml/search-command regex option args point-safe limit))))))
 
 (defconst ml/keywords-1
   (let ((headings
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("title"  "begin" "end" "chapter" "part" "section" "subsection"
              "subsubsection" "paragraph" "subparagraph" "subsubparagraph"
              "newcommand" "renewcommand" "providecommand" "newenvironment"
@@ -326,19 +324,19 @@ be K-th ARG if succeeded."
              "renewenvironment*" "newtheorem*" "renewtheorem*")) t 1))
         (variables
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("newcounter" "newcounter*" "setcounter" "addtocounter"
              "setlength" "addtolength" "settowidth")) nil 1))
         (includes
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("input" "include" "includeonly" "bibliography"
              "epsfig" "psfig" "epsf" "nofiles" "usepackage"
              "documentstyle" "documentclass" "verbatiminput"
              "includegraphics" "includegraphics*")) t 1))
         (verbish
          (ml/command-matcher
-          (ml/regexp-opt '("url" "nolinkurl" "path")) t 1))
+          (ml/command-regexp-opt '("url" "nolinkurl" "path")) t 1))
         (definitions                    ; i have no idea what this is
           "^[ \t]*\\\\def *\\\\\\(\\(\\w\\|@\\)+\\)"))
     `((,headings 1 font-lock-function-name-face keep)
@@ -351,14 +349,14 @@ be K-th ARG if succeeded."
 (defconst ml/keywords-2
   (let ((bold
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("textbf" "textsc" "textup" "boldsymbol" "pmb" "bm")) nil 1))
         (italic
          (ml/command-matcher
-          (ml/regexp-opt '("textit" "textsl" "emph")) nil 1))
+          (ml/command-regexp-opt '("textit" "textsl" "emph")) nil 1))
         (citations
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("label" "ref" "pageref" "vref" "eqref" "cite" "Cite"
              "nocite" "index" "glossary" "bibitem" "citep" "citet")) t 1))
         (quotes
@@ -368,7 +366,7 @@ be K-th ARG if succeeded."
          (ml/command-matcher "\\\\\\(?:\\\\\\*?\\)" nil nil))
         (specials-2
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("linebreak" "nolinebreak" "pagebreak" "nopagebreak"
              "newline" "newpage" "clearpage" "cleardoublepage"
              "displaybreak" "allowdisplaybreaks" "enlargethispage")) nil nil))
@@ -394,10 +392,10 @@ be K-th ARG if succeeded."
         (color (ml/command-matcher "\\\\textcolor\\>" nil 2))
         (type
          (ml/command-matcher
-          (ml/regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
+          (ml/command-regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
         (box
          (ml/command-matcher
-          (ml/regexp-opt
+          (ml/command-regexp-opt
            '("ovalbox" "Ovalbox" "fbox" "doublebox" "shadowbox")) nil 1)))
     `((,title 1 'ml/title append)
       (,chapter 1 'ml/chapter append)
@@ -425,15 +423,15 @@ be K-th ARG if succeeded."
 
 ;; + block highlighter
 
-(defun ml/block-matcher (name &optional option args point-safe)
+(defun ml/block-matcher (regex &optional option args point-safe)
   "Generate a forward search function that matches something like
-\"\\begin{env} \\NAME[OPT]{ARG1}...{ARGn} ... BODY
-... \\end{env}\" and moves the cursor just after the
-NAME. (match-string 0) will be NAME, (match-string 1) will be
-BODY, and (match-string (1+ k)) will be K-th ARG if succeeded."
+\"REGEX[OPT]{ARG1}...{ARGn} ... BODY ... \\end{env}\" and moves
+the cursor just after the NAME. (match-string 0) will be
+NAME, (match-string 1) will be BODY, and (match-string (1+ k))
+will be K-th ARG if succeeded."
   `(lambda (&optional limit)
      (ignore-errors
-       (ml/search-block ,name ,option ,args ,point-safe limit))))
+       (ml/search-block ,regex ,option ,args ,point-safe limit))))
 
 (defun ml/search-block (regex &optional option args point-safe limit)
   "(Internal function for `ml/block-matcher')"
@@ -493,35 +491,27 @@ BODY, and (match-string (1+ k)) will be K-th ARG if succeeded."
                         ((string= col "yellow") 'ml/yellow))))))
   "An alist of (MATCHER . FACE). MATCHER is a function that takes
 an argument, limit of the search, and does a forward search like
-`search-forward-regexp' then sets match-data properly. FACE is *a
-sexp* which is evaluated to a face. (match-string 1) will be
+`search-forward-regexp' then sets match-data as needed. FACE is
+*a sexp* which evaluates to a face. (match-string 1) will be
 propertized with the face.")
 
-(defun ml/make-block-overlay (command-beg command-end body-beg body-end &rest props)
-  "Make a pair of overlays, a block overlay and a command
-overlay. The command overlay will have `partner' property that
-points the block overlay which the command is associated
-with. The block overlay will have PROPS as its properties."
-  (let* ((ov1 (make-overlay command-beg command-end))
-         (ov2 (make-overlay body-beg body-end))
-         (hooks (list (lambda (ov goahead from to &optional len)
-                        (when goahead
-                          (move-overlay ov
-                                        (min from (overlay-start ov))
-                                        (max to (overlay-end ov))))))))
+(defun ml/make-block-overlay (command-beg command-end content-beg content-end &rest props)
+  "Make a pair of overlays, a content overlay and a command
+overlay. The command overlay will have `partner' property, that
+points the content overlay which the command is associated
+with. The content overlay will have PROPS as its properties."
+  (let* ((ov1 (make-overlay command-beg command-end nil nil t))
+         (ov2 (make-overlay content-beg content-end)))
     (overlay-put ov1 'category 'ml/ov-block)
     (overlay-put ov1 'partner ov2)
-    (overlay-put ov2 'insert-in-front-hooks hooks)
-    (overlay-put ov2 'insert-behind-hooks hooks)
     (while props
       (overlay-put ov2 (car props) (cadr props))
       (setq props (cddr props)))
     ov2))
 
 (defun ml/remove-block-overlays (beg end)
-  "Remove all command overlays from BEG END created with
-`ml/make-block-overlay', and block overlays the command overlays
-are associated with."
+  "Remove all command overlays and their content overlays from
+BEG END."
   (dolist (ov (overlays-in beg end))
     (when (eq (overlay-get ov 'category) 'ml/ov-block)
       (delete-overlay (overlay-get ov 'partner))
@@ -535,8 +525,8 @@ are associated with."
   (when magic-latex-enable-block-highlight
     (dolist (command ml/block-commands)
       (save-excursion
-        (let ((regexp (car command)))
-          (while (funcall regexp end)
+        (let ((matcher (car command)))
+          (while (funcall matcher end)
             (ml/make-block-overlay (match-beginning 0) (match-end 0)
                                    (match-beginning 1) (match-end 1)
                                    'face (eval (cdr command)))))))))
@@ -809,7 +799,13 @@ are associated with."
           ml/arrow-symbols
           ml/letter-symbols
           ml/other-symbols
-          ml/accents))
+          ml/accents)
+  "An alist of (REGEXP . EXPR). REGEXP is a regular expression
+that matches to a command that will be prettified, and EXPR is *a
+sexp* which evaluates to a display string for the command. You
+can assume that the expressions are evaluated immediately after
+regex search, so that you can use match data in the
+expressions.")
 
 (defun ml/make-pretty-overlay (from to &rest props)
   "Make an overlay from FROM to TO, that has PROPS as its
@@ -867,12 +863,16 @@ the command name."
                (body-end (match-end 1))
                (delim-beg (match-beginning 0))
                (delim-end (match-end 0))
+               ;; the point can be already prettified in a recursive
+               ;; suscript like "a_{b_c}".
                (oldov (ml/overlay-at body-beg 'category 'ml/ov-pretty))
                (oldprop (and oldov (overlay-get oldov 'display)))
                (priority-base (and oldov (or (overlay-get oldov 'priority) 0)))
                (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
                (height-base (or (cadr (assoc 'height oldprop)) 1.0))
                (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
+               ;; new overlay must have higher priority than the old
+               ;; one.
                (ov2 (ml/make-pretty-overlay
                      body-beg body-end 'priority (when oldov (1+ priority-base)))))
           (cl-case (string-to-char (match-string 0))
