@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 0.2.0
+;; Version: 0.3.0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
 ;;; Commentary:
@@ -41,6 +41,7 @@
 ;; 0.1.0 add highlights, fix fatal bugs
 ;; 0.1.1 implement nested sub/super-scripts
 ;; 0.2.0 add option to disable some prettifiers
+;; 0.3.0 experimental support for alignment commands
 
 ;;; Code:
 
@@ -50,7 +51,7 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-buffer-version "0.2.0")
+(defconst magic-latex-buffer-version "0.3.0")
 
 ;; + customizable vars
 
