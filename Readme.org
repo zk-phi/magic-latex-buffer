@@ -51,6 +51,8 @@ You can disable/enable some features independently.
 alignment commands like =center=, =flushright=. All other features are
 enabled by default.
 
+[[imgs/alignment.gif]]
+
 ** Known Issues
 
 - Not perfectly compatible with =multiple-cursors=
