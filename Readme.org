@@ -40,11 +40,16 @@ add the function to the mode hook.
 
 ** Customizations
 
-You can disable some features independently.
+You can disable/enable some features independently.
 
 : (setq magic-latex-enable-block-highlight t
 :       magic-latex-enable-suscript        t
-:       magic-latex-enable-pretty-symbols  t)
+:       magic-latex-enable-pretty-symbols  nil
+:       magic-latex-enable-block-align     t) ;; EXPERIMENTAL
+
+=magic-latex-enable-block-align= enables experimental support for
+alignment commands like =center=, =flushright=. All other features are
+enabled by default.
 
 ** Known Issues
 
