@@ -500,7 +500,7 @@ propertized with the face.")
 overlay. The command overlay will have `partner' property, that
 points the content overlay which the command is associated
 with. The content overlay will have PROPS as its properties."
-  (let* ((ov1 (make-overlay command-beg command-end nil nil t))
+  (let* ((ov1 (make-overlay command-beg command-end))
          (ov2 (make-overlay content-beg content-end)))
     (overlay-put ov1 'category 'ml/ov-block)
     (overlay-put ov1 'partner ov2)
