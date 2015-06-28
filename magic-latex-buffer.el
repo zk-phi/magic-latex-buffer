@@ -70,6 +70,11 @@
   "When non-nil, prettify blocks like \"{\\large ...}\"."
   :group 'magic-latex-buffer)
 
+(defcustom magic-latex-enable-block-align nil
+  "[EXPERIMENTAL] When non-nil, align blocks like \"{\\centering
+  ...}\"."
+  :group 'magic-latex-buffer)
+
 (defcustom magic-latex-enable-suscript t
   "When non-nil, prettify subscripts and superscripts like
   \"a_1\", \"e^{-x}\"."
@@ -525,11 +530,97 @@ BEG END."
   (when magic-latex-enable-block-highlight
     (dolist (command ml/block-commands)
       (save-excursion
-        (let ((matcher (car command)))
-          (while (funcall matcher end)
-            (ml/make-block-overlay (match-beginning 0) (match-end 0)
-                                   (match-beginning 1) (match-end 1)
-                                   'face (eval (cdr command)))))))))
+        (while (funcall (car command) end)
+          (ml/make-block-overlay (match-beginning 0) (match-end 0)
+                                 (match-beginning 1) (match-end 1)
+                                 'face (eval (cdr command))))))))
+
+;; + block aligner
+
+(defconst ml/align-commands
+  `((,(ml/block-matcher "\\\\\\(?:centering\\>\\|begin{center}\\)" nil nil) . center)
+    (,(ml/block-matcher "\\\\\\(?:raggedleft\\>\\|begin{flushleft}\\)" nil nil) . left)
+    (,(ml/block-matcher "\\\\\\(?:raggedright\\>\\|begin{flushright}\\)" nil nil) . right))
+  "An alist of (MATCHER . POSITION). MATCHER is a function that
+takes an argument, limit of the search, and does a forward search
+like `search-forward-regexp' then sets match-data as
+needed. POSITION can be one of 'center 'right 'left.")
+
+;; *FIXME* NOT EFFICIENT
+;; *FIXME* NEED REFACTORING
+(defun ml/make-align-overlay (command-beg command-end content-beg content-end position)
+  "Make a command overlay and alignment overlay(s) like
+`ml/make-block-overlay'. The command overlay will have `partners'
+property, which is bound to the list of all alignment
+overlay(s)."
+  (save-excursion
+    (remove-overlays content-beg content-end 'category 'ml/ov-align-alignment)
+    (let ((ov (make-overlay command-beg command-end))
+          blockstart blockend ovs)
+      (goto-char content-beg)
+      (end-of-visual-line 2)
+      (while (< (point) content-end)
+        (save-excursion
+          (setq blockstart (when (ignore-errors
+                                   (beginning-of-visual-line)
+                                   (ml/search-regexp "{\\|\\\\begin\\_>" content-end))
+                             (goto-char (match-beginning 0)))
+                blockend   (when blockstart
+                             (condition-case nil
+                                 (progn (ml/skip-blocks 0)
+                                        (end-of-visual-line)
+                                        (point))
+                               (error (goto-char (point-max)))))))
+        (while (< (point) (or blockstart content-end))
+          (let ((width (current-column)))
+            (beginning-of-visual-line)
+            (push (ml/make-align-overlay-1 (point) width position) ovs))
+          (end-of-visual-line 2))
+        (when blockstart
+          (let (width bols)
+            (while (<= (point) blockend)
+              (setq width (if width (max width (current-column)) (current-column)))
+              (beginning-of-visual-line)
+              (push (point) bols)
+              (end-of-visual-line 2))
+            (setq ovs (nconc (mapcar (lambda (p)
+                                       (ml/make-align-overlay-1 p width position))
+                                     bols)
+                             ovs))))
+        (overlay-put ov 'category 'ml/ov-align)
+        (overlay-put ov 'partners ovs)))))
+
+(defun ml/make-align-overlay-1 (pos width position)
+  "*internal function for `ml/make-align-overlay'*"
+  (let ((display (cl-case position
+                   ((left)   `((space :align-to left)))
+                   ((center) `((space :align-to (- center ,(/ width 2)))))
+                   ((right)  `((space :align-to (- right ,width))))))
+        (ov (make-overlay pos pos)))
+    (overlay-put ov 'before-string (propertize " " 'display display))
+    (overlay-put ov 'category 'ml/ov-align-alignment)
+    ov))
+
+(defun ml/remove-align-overlays (beg end)
+  "Remove all command overlays and their alignment overlays
+between BEG and END."
+  (dolist (ov (overlays-in beg end))
+    (when (eq (overlay-get ov 'category) 'ml/ov-align)
+      (mapc 'delete-overlay (overlay-get ov 'partners))
+      (delete-overlay ov))))
+
+(defun ml/jit-block-aligner (beg end)
+  (condition-case nil
+      (progn (ml/skip-blocks 1 nil t) (point))
+    (error (goto-char 1)))
+  (ml/remove-align-overlays (point) end)
+  (when magic-latex-enable-block-align
+    (dolist (command ml/align-commands)
+      (save-excursion
+        (while (funcall (car command) end)
+          (ml/make-align-overlay (match-beginning 0) (match-end 0)
+                                 (match-beginning 1) (match-end 1)
+                                 (cdr command)))))))
 
 ;; + pretty symbol/suscript
 
@@ -913,6 +1004,7 @@ the command name."
         (font-lock-add-keywords nil ml/keywords 'set)
         (jit-lock-register 'ml/jit-prettifier)
         (jit-lock-register 'ml/jit-block-highlighter)
+        (jit-lock-register 'ml/jit-block-aligner)
         ;; our prettifiers assume that the region is already fontified
         ;; (to recognize verbatim environments, constants and
         ;; comments), thus we need to push `font-lock-fontify-region'
@@ -925,9 +1017,11 @@ the command name."
     (set-syntax-table tex-mode-syntax-table)
     (jit-lock-unregister 'ml/jit-prettifier)
     (jit-lock-unregister 'ml/jit-block-highlighter)
+    (jit-lock-unregister 'ml/jit-block-aligner)
     (jit-lock-unregister 'font-lock-fontify-region)
     (ml/remove-block-overlays (point-min) (point-max))
     (ml/remove-pretty-overlays (point-min) (point-max))
+    (ml/remove-align-overlays (point-min) (point-max))
     (font-lock-refresh-defaults)
     (iimage-mode -1)))
 
