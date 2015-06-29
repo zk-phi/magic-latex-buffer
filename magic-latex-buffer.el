@@ -202,6 +202,12 @@ priority is returned. If there's no such overlays, return nil."
                                      (pb (overlay-get b 'priority)))
                                  (or (null pb) (and pa (>= pa pb))))))))
 
+(defun ml/column-at-eol ()
+  (save-excursion (end-of-line) (current-column)))
+
+(defun ml/column-at-indentation ()
+  (save-excursion (back-to-indentation) (current-column)))
+
 ;;   + LaTeX-specific
 
 (defun ml/skip-comments-and-verbs (&optional backward)
@@ -250,19 +256,20 @@ examples:
    exclusive (a b (|c d (e f) g) h) -> (a b (c d (e f|) g) h)"
   (ml/safe-excursion
    (save-match-data
-     (if (not (ml/search-regexp
-               (if brace-only
-                   "\\({\\)\\|\\(}\\)"
-                 "\\(\\\\begin\\>\\|{\\|\\[\\)\\|\\(\\\\end\\>\\|}\\|]\\)")
-               nil backward))
-         (error "unmatched blocks")
-       (setq n (if backward
-                   (+ n
-                      (if (match-beginning 1) -1 0)
-                      (if (match-beginning 2) 1 0))
+     (condition-case nil
+         (ml/search-regexp
+          (if brace-only
+              "\\({\\)\\|\\(}\\)"
+            "\\(\\\\begin\\>\\|{\\|\\[\\)\\|\\(\\\\end\\>\\|}\\|]\\)")
+          nil backward)
+       (error (error "unmatched blocks")))
+     (setq n (if backward
                  (+ n
-                    (if (match-beginning 1) 1 0)
-                    (if (match-beginning 2) -1 0)))))
+                    (if (match-beginning 1) -1 0)
+                    (if (match-beginning 2) 1 0))
+               (+ n
+                  (if (match-beginning 1) 1 0)
+                  (if (match-beginning 2) -1 0))))
      (cond ((< n 0)
             (error "unexpected end-of-block"))
            ((> n 0)
@@ -547,9 +554,7 @@ takes an argument, limit of the search, and does a forward search
 like `search-forward-regexp' then sets match-data as
 needed. POSITION can be one of 'center 'right 'left.")
 
-;; *FIXME* NOT EFFICIENT
-;; *FIXME* INCORRECT DISPLAY FOR NESTED ALIGNING BLOCKS
-;; *FIXME* NEED REFACTORING
+;; *FIXME* INCORRECT DISPLAY FOR NESTED ALIGNED BLOCKS
 (defun ml/make-align-overlay (command-beg command-end content-beg content-end position)
   "Make a command overlay and alignment overlay(s) like
 `ml/make-block-overlay'. The command overlay will have `partners'
@@ -558,45 +563,42 @@ overlay(s)."
   (save-excursion
     (remove-overlays content-beg content-end 'category 'ml/ov-align-alignment)
     (let ((ov (make-overlay command-beg command-end))
-          blockstart blockend ovs)
+          ovs)
       (goto-char content-beg)
-      (end-of-visual-line 2)
-      (while (< (point) content-end)
-        (save-excursion
-          (setq blockstart (when (ignore-errors
-                                   (beginning-of-visual-line)
-                                   (ml/search-regexp "{\\|\\\\begin\\_>" content-end))
-                             (goto-char (match-beginning 0)))
-                blockend   (when blockstart
-                             (condition-case nil
-                                 (progn (ml/skip-blocks 0)
-                                        (end-of-visual-line)
-                                        (point))
-                               (error (goto-char (point-max)))))))
-        (while (< (point) (or blockstart content-end))
-          (let ((width (current-column)))
-            (beginning-of-visual-line)
-            (push (ml/make-align-overlay-1 (point) width position) ovs))
-          (end-of-visual-line 2))
-        (when blockstart
-          (let (width bols)
-            (while (<= (point) blockend)
-              (setq width (if width (max width (current-column)) (current-column)))
-              (beginning-of-visual-line)
-              (push (point) bols)
-              (end-of-visual-line 2))
-            (setq ovs (nconc (mapcar (lambda (p)
-                                       (ml/make-align-overlay-1 p width position))
-                                     bols)
-                             ovs))))
-        (overlay-put ov 'category 'ml/ov-align)
-        (overlay-put ov 'partners ovs)))))
+      (forward-line 1)
+      (while (< (point-at-eol) content-end)
+        (cond ((ignore-errors
+                 (ml/search-regexp "{\\|\\\\begin\\_>" (min content-end (point-at-eol))))
+               (let* ((block-end (condition-case nil
+                                     (save-excursion (ml/skip-blocks 1) (point))
+                                   (error (point-max))))
+                      (bols (list (point-at-bol)))
+                      (width (ml/column-at-eol))
+                      (indentation (ml/column-at-indentation)))
+                 (while (progn
+                          (forward-line 1)
+                          (< (point) block-end))
+                   (push (point) bols)
+                   (setq width       (max width (ml/column-at-eol))
+                         indentation (min indentation (ml/column-at-indentation))))
+                 (setq ovs (nconc (mapcar
+                                   (lambda (p)
+                                     (ml/make-align-overlay-1 p width indentation position))
+                                   bols)
+                                  ovs))))
+              (t
+               (push (ml/make-align-overlay-1
+                      (point) (ml/column-at-eol) (ml/column-at-indentation) position)
+                     ovs)
+               (forward-line 1))))
+      (overlay-put ov 'category 'ml/ov-align)
+      (overlay-put ov 'partners ovs))))
 
-(defun ml/make-align-overlay-1 (pos width position)
+(defun ml/make-align-overlay-1 (pos width indentation position)
   "*internal function for `ml/make-align-overlay'*"
   (let ((display (cl-case position
                    ((left)   `((space :align-to left)))
-                   ((center) `((space :align-to (- center ,(/ width 2)))))
+                   ((center) `((space :align-to (- center ,(/ width 2) ,(/ indentation 2)))))
                    ((right)  `((space :align-to (- right ,width))))))
         (ov (make-overlay pos pos)))
     (overlay-put ov 'before-string (propertize " " 'display display))
