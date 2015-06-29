@@ -179,6 +179,11 @@ for correct inline-math recognition.")
   "Face used for Huge command in magic LaTeX buffers."
   :group 'magic-latex-buffer)
 
+(defface ml/lbar '((t (:background "red")))
+  "Face used to render vertical line for quote environments in
+  magic LaTeX buffers."
+  :group 'magic-latex-buffer)
+
 ;; + utilities
 ;;   + general
 
@@ -548,11 +553,12 @@ BEG END."
 (defconst ml/align-commands
   `((,(ml/block-matcher "\\\\\\(?:centering\\>\\|begin{center}\\)" nil nil) . center)
     (,(ml/block-matcher "\\\\\\(?:raggedleft\\>\\|begin{flushleft}\\)" nil nil) . left)
-    (,(ml/block-matcher "\\\\\\(?:raggedright\\>\\|begin{flushright}\\)" nil nil) . right))
+    (,(ml/block-matcher "\\\\\\(?:raggedright\\>\\|begin{flushright}\\)" nil nil) . right)
+    (,(ml/block-matcher "\\\\begin{\\(?:quot\\(?:e\\|ation\\)\\|leftbar\\)}" nil nil) . quote))
   "An alist of (MATCHER . POSITION). MATCHER is a function that
 takes an argument, limit of the search, and does a forward search
 like `search-forward-regexp' then sets match-data as
-needed. POSITION can be one of 'center 'right 'left.")
+needed. POSITION can be one of 'center 'right 'left 'quote.")
 
 ;; *FIXME* INCORRECT DISPLAY FOR NESTED ALIGNED BLOCKS
 (defun ml/make-align-overlay (command-beg command-end content-beg content-end position)
@@ -596,12 +602,13 @@ overlay(s)."
 
 (defun ml/make-align-overlay-1 (pos width indentation position)
   "*internal function for `ml/make-align-overlay'*"
-  (let ((display (cl-case position
-                   ((left)   `((space :align-to left)))
-                   ((center) `((space :align-to (- center ,(/ width 2) ,(/ indentation 2)))))
-                   ((right)  `((space :align-to (- right ,width))))))
+  (let ((prop (cl-case position
+                ((left) `((space :align-to left)))
+                ((center) `((space :align-to (- center ,(/ width 2) ,(/ indentation 2)))))
+                ((right) `((space :align-to (- right ,width))))
+                ((quote) (propertize " " 'face 'ml/lbar))))
         (ov (make-overlay pos pos)))
-    (overlay-put ov 'before-string (propertize " " 'display display))
+    (overlay-put ov 'before-string (propertize " " 'display prop))
     (overlay-put ov 'category 'ml/ov-align-alignment)
     ov))
 
