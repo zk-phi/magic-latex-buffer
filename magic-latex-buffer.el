@@ -41,7 +41,7 @@
 ;; 0.1.0 add highlights, fix fatal bugs
 ;; 0.1.1 implement nested sub/super-scripts
 ;; 0.2.0 add option to disable some prettifiers
-;; 0.3.0 experimental support for alignment commands
+;; 0.3.0 add support for alignment commands
 
 ;;; Code:
 
@@ -71,9 +71,8 @@
   "When non-nil, prettify blocks like \"{\\large ...}\"."
   :group 'magic-latex-buffer)
 
-(defcustom magic-latex-enable-block-align nil
-  "[EXPERIMENTAL] When non-nil, align blocks like \"{\\centering
-...}\"."
+(defcustom magic-latex-enable-block-align t
+  "When non-nil, align blocks like \"{\\centering ...}\"."
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-suscript t
