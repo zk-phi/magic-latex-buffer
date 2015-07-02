@@ -559,19 +559,21 @@ takes an argument, limit of the search, and does a forward search
 like `search-forward-regexp' then sets match-data as
 needed. POSITION can be one of 'center 'right 'left 'quote.")
 
-;; *FIXME* INCORRECT DISPLAY FOR NESTED ALIGNED BLOCKS
 (defun ml/make-align-overlay (command-beg command-end content-beg content-end position)
   "Make a command overlay and alignment overlay(s) like
 `ml/make-block-overlay'. The command overlay will have `partners'
 property, which is bound to the list of all alignment
 overlay(s)."
   (save-excursion
+    (goto-char content-end)
+    (end-of-line 0)
+    (setq content-end (point))
     (remove-overlays content-beg content-end 'category 'ml/ov-align-alignment)
     (let ((ov (make-overlay command-beg command-end))
           ovs)
       (goto-char content-beg)
       (forward-line 1)
-      (while (< (point-at-eol) content-end)
+      (while (<= (point-at-eol) content-end)
         (cond ((ignore-errors
                  (ml/search-regexp "{\\|\\\\begin\\_>" (min content-end (point-at-eol))))
                (let* ((block-end (condition-case nil
