@@ -568,38 +568,39 @@ overlay(s)."
     (goto-char content-end)
     (end-of-line 0)
     (setq content-end (point))
-    (remove-overlays content-beg content-end 'category 'ml/ov-align-alignment)
-    (let ((ov (make-overlay command-beg command-end))
-          ovs)
-      (goto-char content-beg)
-      (forward-line 1)
-      (while (<= (point-at-eol) content-end)
-        (cond ((ignore-errors
-                 (ml/search-regexp "{\\|\\\\begin\\_>" (min content-end (point-at-eol))))
-               (let* ((block-end (condition-case nil
-                                     (save-excursion (ml/skip-blocks 1) (point))
-                                   (error (point-max))))
-                      (bols (list (point-at-bol)))
-                      (width (ml/column-at-eol))
-                      (indentation (ml/column-at-indentation)))
-                 (while (progn
-                          (forward-line 1)
-                          (< (point) block-end))
-                   (push (point) bols)
-                   (setq width       (max width (ml/column-at-eol))
-                         indentation (min indentation (ml/column-at-indentation))))
-                 (setq ovs (nconc (mapcar
-                                   (lambda (p)
-                                     (ml/make-align-overlay-1 p width indentation position))
-                                   bols)
-                                  ovs))))
-              (t
-               (push (ml/make-align-overlay-1
-                      (point) (ml/column-at-eol) (ml/column-at-indentation) position)
-                     ovs)
-               (forward-line 1))))
-      (overlay-put ov 'category 'ml/ov-align)
-      (overlay-put ov 'partners ovs))))
+    (when (< content-beg content-end)
+      (remove-overlays content-beg content-end 'category 'ml/ov-align-alignment)
+      (let ((ov (make-overlay command-beg command-end))
+            ovs)
+        (goto-char content-beg)
+        (forward-line 1)
+        (while (<= (point-at-eol) content-end)
+          (cond ((ignore-errors
+                   (ml/search-regexp "{\\|\\\\begin\\_>" (min content-end (point-at-eol))))
+                 (let* ((block-end (condition-case nil
+                                       (save-excursion (ml/skip-blocks 1) (point))
+                                     (error (point-max))))
+                        (bols (list (point-at-bol)))
+                        (width (ml/column-at-eol))
+                        (indentation (ml/column-at-indentation)))
+                   (while (progn
+                            (forward-line 1)
+                            (< (point) block-end))
+                     (push (point) bols)
+                     (setq width       (max width (ml/column-at-eol))
+                           indentation (min indentation (ml/column-at-indentation))))
+                   (setq ovs (nconc (mapcar
+                                     (lambda (p)
+                                       (ml/make-align-overlay-1 p width indentation position))
+                                     bols)
+                                    ovs))))
+                (t
+                 (push (ml/make-align-overlay-1
+                        (point) (ml/column-at-eol) (ml/column-at-indentation) position)
+                       ovs)
+                 (forward-line 1))))
+        (overlay-put ov 'category 'ml/ov-align)
+        (overlay-put ov 'partners ovs)))))
 
 (defun ml/make-align-overlay-1 (pos width indentation position)
   "*internal function for `ml/make-align-overlay'*"
