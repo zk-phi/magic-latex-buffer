@@ -866,7 +866,9 @@ between BEG and END."
 
 (defconst ml/accents
   `(("\\\\\\(?:mathbb\\){\\([^}]\\)}"
-     . (let ((ch (string-to-char (match-string 1)))) (compose-chars ch '(cc cl -86 0) ch)))
+     ;; . (let ((ch (string-to-char (match-string 1)))) (compose-chars ch '(cc cl -85 0) ch))
+     . (let ((ch (string-to-char (match-string 1)))) (compose-chars ch '(cc cl -96 0) ch))
+     )
     ("\\\\\\(?:vec\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?→))
     ("\\\\\\(?:tilde\\|~\\){\\([^}]\\)}"
