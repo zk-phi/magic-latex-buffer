@@ -45,12 +45,13 @@ function to the mode hook.
 
 ** Customizations
 
-You can disable/enable some features independently.
+You can disable some features independently, if they're too fancy.
 
 : (setq magic-latex-enable-block-highlight nil
 :       magic-latex-enable-suscript        t
 :       magic-latex-enable-pretty-symbols  t
-:       magic-latex-enable-block-align     nil)
+:       magic-latex-enable-block-align     nil
+:       magic-latex-enable-inline-image    nil)
 
 ** Known Issues
 

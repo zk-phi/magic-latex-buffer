@@ -85,6 +85,10 @@
 character composition."
   :group 'magic-latex-buffer)
 
+(defcustom magic-latex-enable-inline-image t
+  "When non-nil, `iimage-mode' is enabled automatically."
+  :group 'magic-latex-buffer)
+
 ;; + vars, consts
 
 (defconst ml/syntax-table
@@ -1028,7 +1032,8 @@ the command name."
         (set (make-local-variable 'iimage-mode-image-regex-alist)
              `((,(concat "\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*"
                          "{\\(" iimage-mode-image-filename-regex "\\)}") . 1)))
-        (iimage-mode 1))
+        (when magic-latex-enable-inline-image
+          (iimage-mode 1)))
     (set-syntax-table tex-mode-syntax-table)
     (jit-lock-unregister 'ml/jit-prettifier)
     (jit-lock-unregister 'ml/jit-block-highlighter)
