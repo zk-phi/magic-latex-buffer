@@ -14,17 +14,22 @@ LaTeX-mode のシンタックスハイライトを激しく
 
   [[imgs/readability.gif]]
 
-- handle nested blocks correctly
+- highlight decorated blocks (note that nested blocks are also
+  highlighted correctly)
 
   [[imgs/nested_blocks.gif]]
 
-- fix inline-math highlighting for documents with multi-byte characters
+- align centered/flushed blocks
+
+[[imgs/alignment.gif]]
 
 - inline image preview powered by =iimage-mode=
 
+- fix inline-math highlighting for documents with multi-byte characters
+
 ** Installation
 
-1. Install an unicode font with many math symbols (eg. Symbolas,
+1. Install an unicode font supporting many symbols (eg. Symbolas,
    Unifont, etc).
 
 2. Put magic-latex-buffer.el into a "load-path"ed directory, and load
@@ -32,9 +37,9 @@ LaTeX-mode のシンタックスハイライトを激しく
 
    : (require 'magic-latex-buffer)
 
-You can enable highlighting with =M-x magic-latex-buffer= in a
-latex-mode-buffer. If you want to enable highlighting automatically,
-add the function to the mode hook.
+You can activate the magic with =M-x magic-latex-buffer= in a
+=latex-mode= buffer. If you want to activate automatically, add the
+function to the mode hook.
 
 : (add-hook 'latex-mode-hook 'magic-latex-buffer)
 
@@ -42,17 +47,11 @@ add the function to the mode hook.
 
 You can disable/enable some features independently.
 
-: (setq magic-latex-enable-block-highlight t
+: (setq magic-latex-enable-block-highlight nil
 :       magic-latex-enable-suscript        t
-:       magic-latex-enable-pretty-symbols  nil
-:       magic-latex-enable-block-align     t) ;; EXPERIMENTAL
-
-=magic-latex-enable-block-align= enables experimental support for
-alignment commands like =center=, =flushright=. All other features are
-enabled by default.
-
-[[imgs/alignment.gif]]
+:       magic-latex-enable-pretty-symbols  t
+:       magic-latex-enable-block-align     nil)
 
 ** Known Issues
 
-- Not perfectly compatible with =multiple-cursors=
+- Not perfectly compatible with =multiple-cursors= (but still usable)
