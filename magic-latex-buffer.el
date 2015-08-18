@@ -94,9 +94,10 @@ character composition."
 (defconst ml/syntax-table
   (let ((st (copy-syntax-table tex-mode-syntax-table)))
     (modify-syntax-entry ?$ "\"" st)
+    (modify-syntax-entry ?\' "." st)
     st)
   "like `tex-mode-syntax-table' but treat $ as a string quote,
-for correct inline-math recognition.")
+for correct inline-math recognition. Also make the quote ' be considered a delimiter (to correctly detect symbols)")
 
 (defvar-local ml/jit-point nil
   "store the point while font-locking")
@@ -1015,7 +1016,7 @@ the command name."
   "Minor mode that highlights latex document magically."
   :init-value nil
   :global nil
-  :lighter "mLaTeX"
+  :lighter " mLaTeX"
   (if magic-latex-buffer
       (progn
         (jit-lock-mode 1)
