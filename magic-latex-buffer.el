@@ -996,17 +996,23 @@ the command name."
   (when magic-latex-enable-pretty-symbols
     (dolist (symbol ml/symbols)
       (save-excursion
-        (let ((regex (car symbol)))
-          (while (ignore-errors (ml/search-regexp regex end nil t))
-            (let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
+        (let ((regex (car symbol))
+	       (st-quote-punctuation (copy-syntax-table ml/syntax-table)))
+	  (modify-syntax-entry ?\' "." st-quote-punctuation)
+					; make the quote ' be
+	       				; considered a delimiter for
+	       				; the sake of detecting symbols
+	  (with-syntax-table st-quote-punctuation
+	      (while (ignore-errors (ml/search-regexp regex end nil t))
+		(let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
                    (priority-base (and oldov (or (overlay-get oldov 'priority) 1)))
                    (oldprop (and oldov (overlay-get oldov 'display))))
-              (unless (stringp oldprop)
-                (ml/make-pretty-overlay
-                 (match-beginning 0) (match-end 0)
-                 'priority (when oldov (1+ priority-base))
-                 'display (propertize (eval (cdr symbol)) 'display oldprop))))))))))
-
+		  (unless (stringp oldprop)
+		    (ml/make-pretty-overlay
+		     (match-beginning 0) (match-end 0)
+		     'priority (when oldov (1+ priority-base))
+		     'display (propertize (eval (cdr symbol)) 'display oldprop)))))))))))
+  
 ;; + activate
 
 ;;;###autoload
