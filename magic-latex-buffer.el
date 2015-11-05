@@ -683,6 +683,7 @@ between BEG and END."
     ("\\\\rightarrow\\>" . "→") ("\\\\leftarrow\\>" . "←")
     ("\\\\leftrightarrow\\>" . "↔") ("\\\\Leftarrow\\>" . "⇐")
     ("\\\\Rightarrow\\>" . "⇒") ("\\\\Leftrightarrow\\>" . "⇔")
+    ("\\\\implies\\>" . "⟹")
 
     ;; geometry
     ("\\\\parallel\\>" . "∥") ("\\\\perp\\>" . "⊥")
