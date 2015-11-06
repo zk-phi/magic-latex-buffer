@@ -1,6 +1,6 @@
 * magic-latex-buffer.el
 
-magical syntax highlighting for LaTeX-mode buffers.
+Magically enhance LaTeX-mode font-locking for semi-WYSIWYG editing.
 
 LaTeX-mode のシンタックスハイライトを激しく
 
