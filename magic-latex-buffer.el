@@ -372,10 +372,10 @@ K-th ARG if succeeded."
   (let ((bold
          (ml/command-matcher
           (ml/command-regexp-opt
-           '("textbf" "textsc" "textup" "boldsymbol" "pmb" "bm")) nil 1))
+           '("textbf" "mathbf" "textsc" "textup" "boldsymbol" "pmb" "bm")) nil 1))
         (italic
          (ml/command-matcher
-          (ml/command-regexp-opt '("textit" "textsl" "emph")) nil 1))
+          (ml/command-regexp-opt '("textit" "mathit" "textsl" "emph")) nil 1))
         (citations
          (ml/command-matcher
           (ml/command-regexp-opt
@@ -414,7 +414,8 @@ K-th ARG if succeeded."
         (color (ml/command-matcher "\\\\textcolor\\>" nil 2))
         (type
          (ml/command-matcher
-          (ml/command-regexp-opt '("texttt" "textmd" "textrm" "textsf")) nil 1))
+          (ml/command-regexp-opt
+           '("texttt" "mathtt" "textmd" "textrm" "mathrm" "textsf" "mathsf")) nil 1))
         (box
          (ml/command-matcher
           (ml/command-regexp-opt
