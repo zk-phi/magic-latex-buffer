@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 0.3.0
+;; Version: 0.4.0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
 ;;; Commentary:
@@ -42,6 +42,7 @@
 ;; 0.1.1 implement nested sub/super-scripts
 ;; 0.2.0 add option to disable some prettifiers
 ;; 0.3.0 add support for alignment commands
+;; 0.4.0 add option `magic-latex-enable-minibuffer-echo'
 
 ;;; Code:
 
@@ -51,7 +52,7 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-buffer-version "0.3.0")
+(defconst magic-latex-buffer-version "0.4.0")
 
 ;; + customizable vars
 
