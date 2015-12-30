@@ -89,6 +89,10 @@ character composition."
   "When non-nil, `iimage-mode' is enabled automatically."
   :group 'magic-latex-buffer)
 
+(defcustom magic-latex-enable-minibuffer-echo t
+  "When non-nil, actual command is displayed in the modeline."
+  :group 'magic-latex-buffer)
+
 ;; + vars, consts
 
 (defconst ml/syntax-table
@@ -821,6 +825,7 @@ between BEG and END."
   '(
     ;; TeX commands
     ("\\\\begin\\>" . "▽") ("\\\\end\\>" . "△")
+    ;; ("\\\\begin\\>" . "◸") ("\\\\end\\>" . "◺")
     ("\\\\\\(?:bib\\)?item\\>" . "＊") ("\\\\par\\>" . "¶")
     ("\\\\ref\\>" . "☞") ("\\\\\\(?:c\\|C\\)ite\\>" . "†")
     ("\\\\footnote\\(?:mark\\)?\\>" . "‡")
@@ -1013,6 +1018,12 @@ the command name."
 
 ;; + activate
 
+(defun ml/post-command-function ()
+  (let ((ov (ml/overlay-at (point) 'category 'ml/ov-pretty))
+        (message-log-max nil)) ; do not to insert to *Messages* buffer
+    (when (and ov magic-latex-enable-minibuffer-echo)
+      (message (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))))))
+
 ;;;###autoload
 (define-minor-mode magic-latex-buffer
   "Minor mode that highlights latex document magically."
@@ -1021,6 +1032,7 @@ the command name."
   :lighter " mLaTeX"
   (if magic-latex-buffer
       (progn
+        (add-hook 'post-command-hook 'ml/post-command-function nil t)
         (jit-lock-mode 1)
         (setq-local font-lock-multiline t)
         (set-syntax-table ml/syntax-table)
@@ -1036,8 +1048,8 @@ the command name."
         (set (make-local-variable 'iimage-mode-image-regex-alist)
              `((,(concat "\\\\includegraphics[\s\t]*\\(?:\\[[^]]*\\]\\)?[\s\t]*"
                          "{\\(" iimage-mode-image-filename-regex "\\)}") . 1)))
-        (when magic-latex-enable-inline-image
-          (iimage-mode 1)))
+        (when magic-latex-enable-inline-image (iimage-mode 1)))
+    (remove-hook 'post-command-hook 'ml/post-command-function t)
     (set-syntax-table tex-mode-syntax-table)
     (jit-lock-unregister 'ml/jit-prettifier)
     (jit-lock-unregister 'ml/jit-block-highlighter)
