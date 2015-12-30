@@ -51,7 +51,8 @@ You can disable some features independently, if they're too fancy.
 :       magic-latex-enable-suscript        t
 :       magic-latex-enable-pretty-symbols  t
 :       magic-latex-enable-block-align     nil
-:       magic-latex-enable-inline-image    nil)
+:       magic-latex-enable-inline-image    nil
+:       magic-latex-enable-minibuffer-echo nil)
 
 ** Known Issues
 
