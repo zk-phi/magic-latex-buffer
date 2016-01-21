@@ -649,7 +649,7 @@ between BEG and END."
 ;; + pretty symbol/suscript
 
 (defconst ml/decoration-commands
-  '(("\\\\\\(?:text\\(?:md\\|rm\\|sf\\|tt\\)\\)\\>"
+  '(("\\\\\\(\\(?:text\\(?:md\\|rm\\|sf\\|tt\\)\\)\\|verb\\)\\>"
      . (propertize "T" 'face 'ml/type))
     ("\\\\\\(?:emph\\|text\\(?:it\\|sl\\)\\)\\>"
      . (propertize "I" 'face 'italic))
@@ -839,7 +839,7 @@ between BEG and END."
                                      ?T '(cr cl -18 -60) ?E '(cr cl -20 5) ?X))
 
     ;; escaped symbols
-    ("\\\\\\$" . "＄") ("\\\\_" . "＿")
+    ("\\\\\\$" . "＄") ("\\\\%" . "％") ("\\\\#" . "＃") ("\\\\_" . "＿")
     ;; alignment character (&)
     ("&" . (compose-chars ?& ?|))
 
