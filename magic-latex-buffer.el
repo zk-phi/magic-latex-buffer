@@ -649,9 +649,9 @@ between BEG and END."
 ;; + pretty symbol/suscript
 
 (defconst ml/decoration-commands
-  '(("\\\\\\(\\(?:text\\(?:md\\|rm\\|sf\\|tt\\)\\)\\|verb\\)\\>"
+  '(("\\\\\\(\\(?:\\(?:text\\|math\\)\\(?:md\\|rm\\|sf\\|tt\\)\\)\\|verb\\)\\>"
      . (propertize "T" 'face 'ml/type))
-    ("\\\\\\(?:emph\\|text\\(?:it\\|sl\\)\\)\\>"
+    ("\\\\\\(?:emph\\|\\(?:text\\|math\\)\\(?:it\\|sl\\)\\)\\>"
      . (propertize "I" 'face 'italic))
     ("\\\\\\(?:b\\(?:m\\|oldsymbol\\)\\|pmb\\|text\\(?:bf\\|sc\\|up\\)\\)\\>"
      . (propertize "B" 'face 'bold))
