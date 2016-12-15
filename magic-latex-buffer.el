@@ -546,11 +546,11 @@ BEG END."
       (delete-overlay ov))))
 
 (defun ml/jit-block-highlighter (beg end)
-  (condition-case nil
-      (progn (ml/skip-blocks 1 nil t) (point))
-    (error (goto-char 1)))
-  (ml/remove-block-overlays (point) end)
   (when magic-latex-enable-block-highlight
+    (condition-case nil
+        (progn (ml/skip-blocks 1 nil t) (point))
+      (error (goto-char 1)))
+    (ml/remove-block-overlays (point) end)
     (dolist (command ml/block-commands)
       (save-excursion
         (while (funcall (car command) end)
@@ -634,11 +634,11 @@ between BEG and END."
       (delete-overlay ov))))
 
 (defun ml/jit-block-aligner (beg end)
-  (condition-case nil
-      (progn (ml/skip-blocks 1 nil t) (point))
-    (error (goto-char 1)))
-  (ml/remove-align-overlays (point) end)
   (when magic-latex-enable-block-align
+    (condition-case nil
+        (progn (ml/skip-blocks 1 nil t) (point))
+      (error (goto-char 1)))
+    (ml/remove-align-overlays (point) end)
     (dolist (command ml/align-commands)
       (save-excursion
         (while (funcall (car command) end)
