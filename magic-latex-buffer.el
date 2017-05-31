@@ -733,8 +733,10 @@ between BEG and END."
     ("\\\\mp\\>" . "∓") ("\\\\pm\\>" . "±")
     ("\\\\Re\\>" . "ℜ") ("\\\\Im\\>" . "ℑ") ("\\\\angle\\>" . "∠")
     ("\\\\s\\(?:urd\\|qrt\\)\\>" . "√") ("\\\\partial\\>" . "∂")
-    ("\\\\int\\>" . "∫") ("\\\\iint\\>" . "∬") ("\\\\iiint\\>" . "∭")
-    ("\\\\oint\\>" . "∮")
+    ("\\\\int\\>" . "∫") ("\\\\iint\\>" . "∬")
+    ("\\\\iiint\\>" . "∭") ("\\\\iiiint\\>" . "⨌")
+    ("\\\\oint\\>" . "∮") ("\\\\oiint\\>" . "∯") ("\\\\oiiint\\>" . "∰")
+    ("\\\\ointclockwise\\>" . "∲") ("\\\\ointctrclockwise\\>" . "∳")
     ("\\\\varlimsup\\>" . (propertize "lim" 'face 'ml/overline))
     ("\\\\varliminf\\>" . (propertize "lim" 'face 'underline))
 
