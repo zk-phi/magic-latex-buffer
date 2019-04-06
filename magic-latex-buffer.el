@@ -747,6 +747,7 @@ between BEG and END."
     ("\\\\diamond\\>" . "♢") ("\\\\Diamond\\>" . "◇")
     ("\\\\star\\>" . "★") ("\\\\triangle\\>" . "△")
     ("\\\\triangleleft\\>" . "◁") ("\\\\triangleright\\>" . "▷")
+    ("\\\\trianglelefteq\\>" . "⊴") ("\\\\trianglerighteq\\>" . "⊵")
     ("\\\\bigtriangleup\\>" . "△") ("\\\\bigtriangledown\\>" . "▽")
     ))
 
