@@ -880,6 +880,8 @@ between BEG and END."
     ("\\\\clubsuit\\>" . "♣") ("\\\\diamondsuit\\>" . "♦")
     ("\\\\heartsuit\\>" . "♥") ("\\\\spadesuit\\>" . "♠")
     ("\\\\pounds\\>"  . "£") ("\\\\P\\>" . "¶")
+    ("\\\\lvert\\>"  . "|") ("\\\\rvert\\>" . "|")
+    ("\\\\lVert\\>"  . "ǁ") ("\\\\rVert\\>" . "ǁ")
     ))
 
 (defconst ml/accents
