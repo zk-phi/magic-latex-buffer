@@ -256,7 +256,7 @@ matching string."
                 (not (and point-safe
                           (< (point) ml/jit-point)
                           (< ml/jit-point (match-end 0))))
-                (looking-back "\\([^\\\\]\\|^\\)\\(\\\\\\\\\\)*")
+                (looking-back "\\([^\\\\]\\|^\\)\\(\\\\\\\\\\)*" (point-min))
                 (not (ml/skip-comments-and-verbs backward)))))
        (ml/search-regexp regex bound backward point-safe))))
 
