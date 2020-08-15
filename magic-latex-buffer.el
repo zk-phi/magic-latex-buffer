@@ -67,32 +67,39 @@
     font-lock-constant-face
     tex-verbatim)
   "List of faces which magic-latex should ignore."
+  :type '(list face)
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-block-highlight t
   "When non-nil, prettify blocks like \"{\\large ...}\"."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-block-align t
   "When non-nil, align blocks like \"{\\centering ...}\"."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-suscript t
   "When non-nil, prettify subscripts and superscripts like
 \"a_1\", \"e^{-x}\"."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-pretty-symbols t
   "When non-nil, prettify symbols with unicode characters and
 character composition."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-inline-image t
   "When non-nil, `iimage-mode' is enabled automatically."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-minibuffer-echo t
   "When non-nil, actual command is displayed in the modeline."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 ;; + vars, consts
