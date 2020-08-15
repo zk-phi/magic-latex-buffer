@@ -19,7 +19,7 @@
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
 ;; Version: 0.4.0
-;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
+;; Package-Requires: ((cl-lib "0.5") (emacs "24.4"))
 
 ;;; Commentary:
 
@@ -43,6 +43,7 @@
 ;; 0.2.0 add option to disable some prettifiers
 ;; 0.3.0 add support for alignment commands
 ;; 0.4.0 add option `magic-latex-enable-minibuffer-echo'
+;; 0.4.1 migrate to nadvice.el
 
 ;;; Code:
 
@@ -52,7 +53,7 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-buffer-version "0.4.0")
+(defconst magic-latex-buffer-version "0.4.1")
 
 ;; + customizable vars
 
@@ -106,9 +107,9 @@ for correct inline-math recognition. Also make the quote ' be considered a delim
 
 (defvar-local ml/jit-point nil
   "store the point while font-locking")
-(defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
+(define-advice jit-lock-fontify-now (:around (fn &rest args) ml/ad-jit-lock)
   (let ((ml/jit-point (point)))
-    ad-do-it))
+    (apply fn args)))
 
 ;; + faces
 
