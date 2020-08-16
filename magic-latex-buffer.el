@@ -19,7 +19,7 @@
 ;; Author: zk_phi
 ;; URL: http://zk-phi.github.io/
 ;; Version: 0.4.0
-;; Package-Requires: ((cl-lib "0.5") (emacs "24.4"))
+;; Package-Requires: ((cl-lib "0.5") (emacs "25.1"))
 
 ;;; Commentary:
 
