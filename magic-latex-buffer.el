@@ -553,7 +553,7 @@ BEG END."
       (delete-overlay (overlay-get ov 'partner))
       (delete-overlay ov))))
 
-(defun ml/jit-block-highlighter (beg end)
+(defun ml/jit-block-highlighter (_ end)
   (when magic-latex-enable-block-highlight
     (condition-case nil
         (progn (ml/skip-blocks 1 nil t) (point))
@@ -641,7 +641,7 @@ between BEG and END."
       (mapc 'delete-overlay (overlay-get ov 'partners))
       (delete-overlay ov))))
 
-(defun ml/jit-block-aligner (beg end)
+(defun ml/jit-block-aligner (_ end)
   (when magic-latex-enable-block-align
     (condition-case nil
         (progn (ml/skip-blocks 1 nil t) (point))
@@ -1004,17 +1004,17 @@ the command name."
                (priority-base (and oldov (or (overlay-get oldov 'priority) 0)))
                (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
                (height-base (or (cadr (assoc 'height oldprop)) 1.0))
-               (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
+               (_ (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
                ;; new overlay must have higher priority than the old
                ;; one.
-               (ov2 (ml/make-pretty-overlay
-                     body-beg body-end 'priority (when oldov (1+ priority-base)))))
+               (ov (ml/make-pretty-overlay
+                    body-beg body-end 'priority (when oldov (1+ priority-base)))))
           (cl-case (string-to-char (match-string 0))
             ((?_) (overlay-put
-                   ov2 'display
+                   ov 'display
                    `((raise ,(- raise-base 0.2)) (height ,(* height-base 0.8)))))
             ((?^) (overlay-put
-                   ov2 'display
+                   ov 'display
                    `((raise ,(+ raise-base 0.2)) (height ,(* height-base 0.8))))))))))
   ;; prettify symbols
   (when magic-latex-enable-pretty-symbols
