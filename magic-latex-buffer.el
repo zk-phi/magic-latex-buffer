@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;;; magic-latex-buffer.el --- Magically enhance LaTeX-mode font-locking for semi-WYSIWYG editing
 
 ;; Copyright (C) 2014-2015 zk_phi
