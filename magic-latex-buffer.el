@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;;; magic-latex-buffer.el --- Magically enhance LaTeX-mode font-locking for semi-WYSIWYG editing
 
 ;; Copyright (C) 2014-2015 zk_phi
@@ -17,9 +18,9 @@
 ;; Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 ;; Author: zk_phi
-;; URL: http://hins11.yu-yake.com/
+;; URL: http://zk-phi.github.io/
 ;; Version: 0.4.0
-;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
+;; Package-Requires: ((cl-lib "0.5") (emacs "25.1"))
 
 ;;; Commentary:
 
@@ -43,6 +44,7 @@
 ;; 0.2.0 add option to disable some prettifiers
 ;; 0.3.0 add support for alignment commands
 ;; 0.4.0 add option `magic-latex-enable-minibuffer-echo'
+;; 0.4.1 migrate to nadvice.el
 
 ;;; Code:
 
@@ -52,7 +54,7 @@
 (require 'iimage)
 (require 'cl-lib)
 
-(defconst magic-latex-buffer-version "0.4.0")
+(defconst magic-latex-buffer-version "0.4.1")
 
 ;; + customizable vars
 
@@ -66,32 +68,39 @@
     font-lock-constant-face
     tex-verbatim)
   "List of faces which magic-latex should ignore."
+  :type '(list face)
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-block-highlight t
   "When non-nil, prettify blocks like \"{\\large ...}\"."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-block-align t
   "When non-nil, align blocks like \"{\\centering ...}\"."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-suscript t
   "When non-nil, prettify subscripts and superscripts like
 \"a_1\", \"e^{-x}\"."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-pretty-symbols t
   "When non-nil, prettify symbols with unicode characters and
 character composition."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-inline-image t
   "When non-nil, `iimage-mode' is enabled automatically."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 (defcustom magic-latex-enable-minibuffer-echo t
   "When non-nil, actual command is displayed in the modeline."
+  :type 'boolean
   :group 'magic-latex-buffer)
 
 ;; + vars, consts
@@ -106,9 +115,9 @@ for correct inline-math recognition. Also make the quote ' be considered a delim
 
 (defvar-local ml/jit-point nil
   "store the point while font-locking")
-(defadvice jit-lock-fontify-now (around ml/ad-jit-lock activate)
+(define-advice jit-lock-fontify-now (:around (fn &rest args) ml/ad-jit-lock)
   (let ((ml/jit-point (point)))
-    ad-do-it))
+    (apply fn args)))
 
 ;; + faces
 
@@ -255,7 +264,7 @@ matching string."
                 (not (and point-safe
                           (< (point) ml/jit-point)
                           (< ml/jit-point (match-end 0))))
-                (looking-back "\\([^\\\\]\\|^\\)\\(\\\\\\\\\\)*")
+                (looking-back "\\([^\\\\]\\|^\\)\\(\\\\\\\\\\)*" (point-min))
                 (not (ml/skip-comments-and-verbs backward)))))
        (ml/search-regexp regex bound backward point-safe))))
 
@@ -545,7 +554,7 @@ BEG END."
       (delete-overlay (overlay-get ov 'partner))
       (delete-overlay ov))))
 
-(defun ml/jit-block-highlighter (beg end)
+(defun ml/jit-block-highlighter (_ end)
   (when magic-latex-enable-block-highlight
     (condition-case nil
         (progn (ml/skip-blocks 1 nil t) (point))
@@ -633,7 +642,7 @@ between BEG and END."
       (mapc 'delete-overlay (overlay-get ov 'partners))
       (delete-overlay ov))))
 
-(defun ml/jit-block-aligner (beg end)
+(defun ml/jit-block-aligner (_ end)
   (when magic-latex-enable-block-align
     (condition-case nil
         (progn (ml/skip-blocks 1 nil t) (point))
@@ -1000,17 +1009,17 @@ the command name."
                (priority-base (and oldov (or (overlay-get oldov 'priority) 0)))
                (raise-base (or (cadr (assoc 'raise oldprop)) 0.0))
                (height-base (or (cadr (assoc 'height oldprop)) 1.0))
-               (ov1 (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
+               (_ (ml/make-pretty-overlay delim-beg delim-end 'invisible t))
                ;; new overlay must have higher priority than the old
                ;; one.
-               (ov2 (ml/make-pretty-overlay
-                     body-beg body-end 'priority (when oldov (1+ priority-base)))))
+               (ov (ml/make-pretty-overlay
+                    body-beg body-end 'priority (when oldov (1+ priority-base)))))
           (cl-case (string-to-char (match-string 0))
             ((?_) (overlay-put
-                   ov2 'display
+                   ov 'display
                    `((raise ,(- raise-base 0.2)) (height ,(* height-base 0.8)))))
             ((?^) (overlay-put
-                   ov2 'display
+                   ov 'display
                    `((raise ,(+ raise-base 0.2)) (height ,(* height-base 0.8))))))))))
   ;; prettify symbols
   (when magic-latex-enable-pretty-symbols
