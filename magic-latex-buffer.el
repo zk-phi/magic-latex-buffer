@@ -904,6 +904,8 @@ between BEG and END."
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?→))
     ("\\\\\\(?:tilde\\|~\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?~))
+    ("\\\\\\(?:widetilde\\|~\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?~))
     ("\\\\\\(?:bar\\|=\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?-))
     ("\\\\\\(?:dot\\|\\.\\){\\([^}]\\)}"
