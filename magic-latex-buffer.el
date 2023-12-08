@@ -393,7 +393,7 @@ K-th ARG if succeeded."
         (citations
          (ml/command-matcher
           (ml/command-regexp-opt
-           '("label" "ref" "pageref" "vref" "eqref" "cite" "Cite"
+           '("label" "ref" "pageref" "vref" "eqref" "cite" "Cite" "cref"
              "nocite" "index" "glossary" "bibitem" "citep" "citet")) t 1))
         (quotes
          (concat (regexp-opt `("``" "\"<" "\"`" "<<" "«") t)
@@ -676,7 +676,7 @@ between BEG and END."
   '(
     ;; basic
     ("\\\\eq\\>" . "＝") ("\\\\doteq\\>" . "≐") ("\\\\equiv\\>" . "≡")
-    ("\\\\sim\\>" . "～") ("\\\\simeq\\>" . "≃") ("\\\\cong\\>" . "≅")
+    ("\\\\sim\\>" . "～") ("\\\\simeq\\>" . "≃") ("\\\\eqsim\\>" . "≂") ("\\\\cong\\>" . "≅")
     ("\\\\succ\\>" . "≻") ("\\\\prec\\>" . "≺")
     ("\\\\succeq\\>" . "≽") ("\\\\preceq\\>" . "≼")
     ("\\\\approx\\>" . "≒")
@@ -686,6 +686,8 @@ between BEG and END."
     ("\\\\to\\>" . "→") ("\\\\mapsto\\>" . "↦")
     ("\\\\colon\\>" . ":")
     ("\\\\propto\\>" . "∝")
+    ("\\\\coloneqq\\>" . ":=")
+    ("\\\\eqqcolon\\>" . "=:")
 
     ;; set
     ("\\\\subseteq\\>" . "⊆") ("\\\\subset\\>" . "⊂")
@@ -902,11 +904,15 @@ between BEG and END."
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?→))
     ("\\\\\\(?:tilde\\|~\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?~))
+    ("\\\\\\(?:widetilde\\|~\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?~))
     ("\\\\\\(?:bar\\|=\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?-))
     ("\\\\\\(?:dot\\|\\.\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?・))
     ("\\\\\\(?:hat\\|\\^\\){\\([^}]\\)}"
+     . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?^))
+    ("\\\\\\(?:widehat\\|\\^\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?^))
     ("\\\\\\(?:acute\\|'\\){\\([^}]\\)}"
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 45) ?'))
