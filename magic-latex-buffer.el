@@ -972,7 +972,11 @@ regex search, so that you can use match data in the
 expressions.")
 
 (defvar ml/symbol-plan-cache nil
-  "Cached segmented search plan for `ml/symbols'.")
+  "Cached segmented search plan for `ml/symbols'.
+A plan is a list of search segments where each segments are
+either (exact COMBINED-REGEX DISPLAY-TABLE) or (regexp REGEX
+DISPLAY-STRING). DISPLAY-TABLE is a hash table that maps matches
+to corresponding display strings.")
 
 (defvar ml/symbol-plan-source nil
   "Snapshot of `ml/symbols' used to build `ml/symbol-plan-cache'.")
