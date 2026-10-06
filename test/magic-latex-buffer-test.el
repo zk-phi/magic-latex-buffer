@@ -199,6 +199,14 @@
     (should (= (length ml/symbols) rules))
     (should (< (length (ml/build-symbol-plan)) (length ml/symbols)))))
 
+(ert-deftest ml-test/symbol-plan-specializes-only-built-in-table ()
+  (let ((plan (ml/build-symbol-plan)))
+    (should (= 2 (cl-count 'exact plan :key #'car)))
+    (should (eq 'exact (car (car plan)))))
+  (let* ((ml/symbols (append ml/symbols '(("\\\\foo\\>" . "F"))))
+         (plan (ml/build-symbol-plan)))
+    (should (eq 'regexp (car (car plan))))))
+
 (ert-deftest ml-test/segmented-symbols-match-reference-on-generic-fixture ()
   (let ((content (with-temp-buffer
                    (insert-file-contents ml-test/fixture)
@@ -401,5 +409,21 @@
       (ml-test/block-snapshot
        #'ml-test/reference-jit-block-highlighter content)
       (ml-test/block-snapshot #'ml/jit-block-highlighter content)))))
+
+(ert-deftest ml-test/negated-symbols-match-reference-on-dense-input ()
+  (let ((content
+         (concat
+          "$\\not\\subset \\not \\supseteq \\not\n\\in "
+          "\\not\\rightarrow \\not \\Leftrightarrow$ "
+          "\\\\not\\subset % \\not\\supset\n"
+          ;; Commands that continue past a word boundary, and rules
+          ;; that are not a plain negated command.
+          "$\\not\\subset@x \\not\\in_1 \\not\\to1 "
+          "\\not\\le \\not \\geq \\not\\lhd//> \\not\\lhd "
+          "\\not\\bowtie \\not \\Join$\n")))
+    (should
+     (equal
+      (ml-test/symbol-snapshot #'ml-test/reference-prettify-symbols content)
+      (ml-test/symbol-snapshot #'ml/prettify-symbols content)))))
 
 ;;; magic-latex-buffer-test.el ends here

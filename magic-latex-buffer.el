@@ -956,9 +956,12 @@ between BEG and END."
      . (compose-chars (string-to-char (match-string 1)) '(cc Bc 0 60) ?o))
     ))
 
+(defconst ml/not-symbol-prefix "\\\\not[ \t\n]*"
+  "Regexp prefix of the negated symbols in `ml/symbols'.")
+
 (defconst ml/symbols
   (append (mapcar (lambda (pattern)
-                    (cons (concat "\\\\not[ \t\n]*" (car pattern))
+                    (cons (concat ml/not-symbol-prefix (car pattern))
                           (compose-string (concat "／" (cdr pattern)))))
                   (append ml/relation-symbols ml/arrow-symbols))
           ml/decoration-commands
@@ -976,47 +979,70 @@ can assume that the expressions are evaluated immediately after
 regex search, so that you can use match data in the
 expressions.")
 
+(defun ml/copy-symbols (symbols)
+  "Return a copy of SYMBOLS that shares no conses or regexps with it."
+  (let ((copy (copy-tree symbols)))
+    ;; `copy-tree' shares strings.  Copy regexps too so destructive
+    ;; string edits to `ml/symbols' are detected by `equal'.
+    (dolist (symbol copy)
+      (setcar symbol (copy-sequence (car symbol))))
+    copy))
+
+(defconst ml/default-symbols (ml/copy-symbols ml/symbols)
+  "Copy of the built-in `ml/symbols' table.
+`ml/build-default-symbol-plan' is only used for this table.")
+
 (defvar ml/symbol-plan-cache nil
   "Cached segmented search plan for `ml/symbols'.
 A plan is a list of search segments where each segments are
 either (exact COMBINED-REGEX DISPLAY-TABLE) or (regexp REGEX
-DISPLAY-STRING). DISPLAY-TABLE is a hash table that maps matches
-to corresponding display strings.")
+DISPLAY-STRING). DISPLAY-TABLE is a hash table that maps the
+command matched by the first group to its symbol.")
 
 (defvar ml/symbol-plan-source nil
   "Snapshot of `ml/symbols' used to build `ml/symbol-plan-cache'.")
 
-(defun ml/exact-symbol-source (symbol)
-  "Return literal command text when SYMBOL has a simple exact regexp."
-  (let ((regex (car symbol)))
-    (when (and (string-prefix-p "\\\\" regex)
+(defun ml/exact-symbol-source (symbol &optional prefix)
+  "Return literal command text when SYMBOL has a simple exact regexp.
+When PREFIX is non-nil, the regexp must be PREFIX followed by a
+simple exact regexp."
+  (let ((regex (and (string-prefix-p (or prefix "") (car symbol))
+                    (substring (car symbol) (length prefix)))))
+    (when (and regex
+               (string-prefix-p "\\\\" regex)
                (string-suffix-p "\\>" regex)
                (> (length regex) 4)
                (string-match-p "\\`[[:alpha:]@]+\\'"
                                (substring regex 2 -2)))
       (concat "\\" (substring regex 2 -2)))))
 
-(defun ml/exact-symbol-segment (symbols)
-  "Return a combined search-plan segment for exact SYMBOLS."
+(defun ml/exact-symbol-segment (symbols &optional prefix)
+  "Return a combined search-plan segment for exact SYMBOLS.
+PREFIX is passed to `ml/exact-symbol-source'."
   (let ((table (make-hash-table :test #'equal))
         sources)
     (dolist (symbol symbols)
-      (let ((source (ml/exact-symbol-source symbol)))
+      (let ((source (ml/exact-symbol-source symbol prefix)))
         (puthash source symbol table)
         (push source sources)))
     (list 'exact
-          (concat (regexp-opt (nreverse sources)) "\\>")
+          (concat prefix (regexp-opt (nreverse sources) t) "\\>")
           table)))
 
-(defun ml/build-symbol-plan ()
-  "Build an order-preserving segmented search plan for `ml/symbols'."
-  (let ((counts (make-hash-table :test #'equal))
-        exact-run
-        plan)
+(defun ml/exact-symbol-counts ()
+  "Return a hash table counting the rules of each exact command."
+  (let ((counts (make-hash-table :test #'equal)))
     (dolist (symbol ml/symbols)
       (let ((source (ml/exact-symbol-source symbol)))
         (when source
           (puthash source (1+ (gethash source counts 0)) counts))))
+    counts))
+
+(defun ml/build-ordered-symbol-plan ()
+  "Build an order-preserving segmented search plan for `ml/symbols'."
+  (let ((counts (ml/exact-symbol-counts))
+        exact-run
+        plan)
     (cl-labels
         ((flush-exact-run
           ()
@@ -1032,17 +1058,39 @@ to corresponding display strings.")
       (flush-exact-run))
     (nreverse plan)))
 
+(defun ml/build-default-symbol-plan ()
+  "Build a compact search plan for the built-in symbol table.
+Unlike `ml/build-ordered-symbol-plan', this searches every negated
+symbol, then every unique exact command, before the remaining
+regexps.  The built-in rules render the same in this order."
+  (let ((counts (ml/exact-symbol-counts))
+        not-exacts not-regexps exacts regexps)
+    (dolist (symbol ml/symbols)
+      (let ((source (ml/exact-symbol-source symbol)))
+        (cond ((ml/exact-symbol-source symbol ml/not-symbol-prefix)
+               (push symbol not-exacts))
+              ((string-prefix-p ml/not-symbol-prefix (car symbol))
+               (push (list 'regexp (car symbol) symbol) not-regexps))
+              ((and source (= 1 (gethash source counts)))
+               (push symbol exacts))
+              (t
+               (push (list 'regexp (car symbol) symbol) regexps)))))
+    `(,(ml/exact-symbol-segment (nreverse not-exacts) ml/not-symbol-prefix)
+      ,@(nreverse not-regexps)
+      ,(ml/exact-symbol-segment (nreverse exacts))
+      ,@(nreverse regexps))))
+
+(defun ml/build-symbol-plan ()
+  "Build a segmented search plan for `ml/symbols'."
+  (if (equal ml/symbols ml/default-symbols)
+      (ml/build-default-symbol-plan)
+    (ml/build-ordered-symbol-plan)))
+
 (defun ml/symbol-plan ()
   "Return a cached search plan corresponding to `ml/symbols'."
   (unless (equal ml/symbol-plan-source ml/symbols)
-    (let ((plan (ml/build-symbol-plan))
-          (source (copy-tree ml/symbols)))
-      ;; `copy-tree' shares strings.  Copy regexps too so destructive
-      ;; string edits cannot silently leave a stale compiled search plan.
-      (dolist (symbol source)
-        (setcar symbol (copy-sequence (car symbol))))
-      (setq ml/symbol-plan-source source
-            ml/symbol-plan-cache plan)))
+    (setq ml/symbol-plan-source (ml/copy-symbols ml/symbols)
+          ml/symbol-plan-cache (ml/build-symbol-plan)))
   ml/symbol-plan-cache)
 
 (defun ml/apply-symbol (symbol)
@@ -1067,7 +1115,7 @@ to corresponding display strings.")
         (while (ml/search-regexp-noerror regex end nil t)
           (ml/apply-symbol
            (if (eq 'exact (car segment))
-               (gethash (match-string-no-properties 0) (nth 2 segment))
+               (gethash (match-string-no-properties 1) (nth 2 segment))
              (nth 2 segment))))))))
 
 (defun ml/make-pretty-overlay (from to &rest props)
