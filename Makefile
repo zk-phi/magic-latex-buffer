@@ -5,7 +5,7 @@ FIXTURE := test/fixtures/large-document.tex
 
 .PHONY: test benchmark fixture
 
-test:
+test: $(FIXTURE)
 	$(EMACS) -Q --batch -L . -l ert \
 		-l test/magic-latex-buffer-test.el \
 		-f ert-run-tests-batch-and-exit

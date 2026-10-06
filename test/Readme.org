@@ -8,6 +8,11 @@ escaped commands, ignored regions, and point safety.
 
 : make test
 
+The symbol tests generate the fixture automatically and compare overlays
+against the original per-rule scanner. They cover custom-rule precedence,
+duplicates, capture expressions, and cache reuse and invalidation after
+in-place rule edits.
+
 ** Generate the performance fixture
 
 The benchmark input is deterministic and contains no personal or
@@ -24,9 +29,10 @@ Pass another size in KiB when a larger stress document is useful:
 
 The comparison script builds isolated, byte-compiled copies of both
 revisions and measures five 80-line viewports per iteration. From this
-branch, compare the upstream master branch with the proposed change:
+branch, compare merged PR #47 (=31eb152=) with the proposed change:
 
-: MLB_BENCH_ITERATIONS=20 test/compare-performance.sh master HEAD
+: make fixture
+: MLB_BENCH_ITERATIONS=30 test/compare-performance.sh 31eb152 HEAD
 
 The two arguments may be any locally available Git revisions. For
 example, use =origin/master= instead of =master= after fetching the
@@ -38,3 +44,29 @@ scenario invalidates the sampled viewport before timing
 complete Magic LaTeX pass or an individual display-feature family.
 Overlay counts are printed as a basic output-parity guard alongside
 the timings.
+
+** Symbol-batching measurements
+
+Measured on 2026-09-08 with byte-compiled GNU Emacs 30.2 on Apple Silicon,
+using 30 iterations (150 samples per scenario) and the generated 128 KiB
+fixture.  The candidate includes the content-aware cache fix.  The baseline
+is merged PR #47 (=31eb152=), not the older recursive-search implementation.
+Times are milliseconds.
+
+| Scenario   | Baseline median | Candidate median | Baseline p95 | Candidate p95 | Mean overlays |
+|------------+-----------------+------------------+--------------+---------------+---------------|
+| jit        |          12.333 |            8.959 |       15.445 |        12.303 |         516.0 |
+| full       |          13.588 |           10.046 |       17.051 |        13.336 |         495.6 |
+| symbols    |           5.564 |            1.927 |        6.035 |         2.145 |         180.8 |
+| no-symbols |           8.047 |            8.194 |       11.106 |        11.335 |         314.8 |
+| blocks     |           5.163 |            5.255 |        7.725 |         7.844 |         193.2 |
+| align      |           2.770 |            2.821 |        3.393 |         3.709 |           0.0 |
+
+JIT and full-pass medians improve by approximately 27% and 26%, respectively;
+the symbol median improves by 65%. The corresponding p95 reductions are
+20%, 22%, and 64%.  Mean overlay counts match in every
+scenario, and the tests compare canonical overlay contents as well as counts.
+These are synthetic-fixture measurements, not a guarantee for every document.
+
+Single-pass block scanning and broader built-in symbol batching are separate
+follow-ups and are not included in this comparison.

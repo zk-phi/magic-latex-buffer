@@ -971,6 +971,96 @@ can assume that the expressions are evaluated immediately after
 regex search, so that you can use match data in the
 expressions.")
 
+(defvar ml/symbol-plan-cache nil
+  "Cached segmented search plan for `ml/symbols'.")
+
+(defvar ml/symbol-plan-source nil
+  "Snapshot of `ml/symbols' used to build `ml/symbol-plan-cache'.")
+
+(defun ml/exact-symbol-source (symbol)
+  "Return literal command text when SYMBOL has a simple exact regexp."
+  (let ((regex (car symbol)))
+    (when (and (string-prefix-p "\\\\" regex)
+               (string-suffix-p "\\>" regex)
+               (> (length regex) 4)
+               (string-match-p "\\`[[:alpha:]@]+\\'"
+                               (substring regex 2 -2)))
+      (concat "\\" (substring regex 2 -2)))))
+
+(defun ml/exact-symbol-segment (symbols)
+  "Return a combined search-plan segment for exact SYMBOLS."
+  (let ((table (make-hash-table :test #'equal))
+        sources)
+    (dolist (symbol symbols)
+      (let ((source (ml/exact-symbol-source symbol)))
+        (puthash source symbol table)
+        (push source sources)))
+    (list 'exact
+          (concat (regexp-opt (nreverse sources)) "\\>")
+          table)))
+
+(defun ml/build-symbol-plan ()
+  "Build an order-preserving segmented search plan for `ml/symbols'."
+  (let ((counts (make-hash-table :test #'equal))
+        exact-run
+        plan)
+    (dolist (symbol ml/symbols)
+      (let ((source (ml/exact-symbol-source symbol)))
+        (when source
+          (puthash source (1+ (gethash source counts 0)) counts))))
+    (cl-labels
+        ((flush-exact-run
+          ()
+          (when exact-run
+            (push (ml/exact-symbol-segment (nreverse exact-run)) plan)
+            (setq exact-run nil))))
+      (dolist (symbol ml/symbols)
+        (let ((source (ml/exact-symbol-source symbol)))
+          (if (and source (= 1 (gethash source counts)))
+              (push symbol exact-run)
+            (flush-exact-run)
+            (push (list 'regexp (car symbol) symbol) plan))))
+      (flush-exact-run))
+    (nreverse plan)))
+
+(defun ml/symbol-plan ()
+  "Return a cached search plan corresponding to `ml/symbols'."
+  (unless (equal ml/symbol-plan-source ml/symbols)
+    (let ((plan (ml/build-symbol-plan))
+          (source (copy-tree ml/symbols)))
+      ;; `copy-tree' shares strings.  Copy regexps too so destructive
+      ;; string edits cannot silently leave a stale compiled search plan.
+      (dolist (symbol source)
+        (setcar symbol (copy-sequence (car symbol))))
+      (setq ml/symbol-plan-source source
+            ml/symbol-plan-cache plan)))
+  ml/symbol-plan-cache)
+
+(defun ml/apply-symbol (symbol)
+  "Create a pretty overlay for the current SYMBOL match."
+  (let* ((old-overlay
+          (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
+         (priority-base
+          (and old-overlay (or (overlay-get old-overlay 'priority) 1)))
+         (old-display (and old-overlay (overlay-get old-overlay 'display))))
+    (unless (stringp old-display)
+      (ml/make-pretty-overlay
+       (match-beginning 0) (match-end 0)
+       'priority (when old-overlay (1+ priority-base))
+       'display (propertize (eval (cdr symbol)) 'display old-display)))))
+
+(defun ml/prettify-symbols (beg end)
+  "Create symbol overlays between BEG and END."
+  (dolist (segment (ml/symbol-plan))
+    (save-excursion
+      (goto-char beg)
+      (let ((regex (cadr segment)))
+        (while (ml/search-regexp-noerror regex end nil t)
+          (ml/apply-symbol
+           (if (eq 'exact (car segment))
+               (gethash (match-string-no-properties 0) (nth 2 segment))
+             (nth 2 segment))))))))
+
 (defun ml/make-pretty-overlay (from to &rest props)
   "Make an overlay from FROM to TO, that has PROPS as its
 properties. The overlay is removed as soon as the text between
@@ -1048,18 +1138,7 @@ the command name."
                    `((raise ,(+ raise-base 0.2)) (height ,(* height-base 0.8))))))))))
   ;; prettify symbols
   (when magic-latex-enable-pretty-symbols
-    (dolist (symbol ml/symbols)
-      (save-excursion
-        (let ((regex (car symbol)))
-          (while (ignore-errors (ml/search-regexp regex end nil t))
-            (let* ((oldov (ml/overlay-at (match-beginning 0) 'category 'ml/ov-pretty))
-                   (priority-base (and oldov (or (overlay-get oldov 'priority) 1)))
-                   (oldprop (and oldov (overlay-get oldov 'display))))
-              (unless (stringp oldprop)
-                (ml/make-pretty-overlay
-                 (match-beginning 0) (match-end 0)
-                 'priority (when oldov (1+ priority-base))
-                 'display (propertize (eval (cdr symbol)) 'display oldprop))))))))))
+    (ml/prettify-symbols beg end)))
 
 ;; + activate
 
