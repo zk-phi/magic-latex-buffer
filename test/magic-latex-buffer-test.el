@@ -273,4 +273,133 @@
     (let ((plan (ml/symbol-plan)))
       (should (eq plan (ml/symbol-plan))))))
 
+(defmacro ml-test/with-reference-search (&rest body)
+  "Run BODY with every `ml/search-regexp' call routed to the original search."
+  `(cl-letf (((symbol-function 'ml/search-regexp)
+              #'ml-test/reference-search-regexp))
+     ,@body))
+
+(defconst ml-test/reference-block-commands
+  (let ((tiny (ml/block-matcher "\\\\tiny\\>" nil nil))
+        (script (ml/block-matcher "\\\\scriptsize\\>" nil nil))
+        (footnote (ml/block-matcher "\\\\footnotesize\\>" nil nil))
+        (small (ml/block-matcher "\\\\small\\>" nil nil))
+        (large (ml/block-matcher "\\\\large\\>" nil nil))
+        (llarge (ml/block-matcher "\\\\Large\\>" nil nil))
+        (xlarge (ml/block-matcher "\\\\LARGE\\>" nil nil))
+        (huge (ml/block-matcher "\\\\huge\\>" nil nil))
+        (hhuge (ml/block-matcher "\\\\Huge\\>" nil nil))
+        (type (ml/block-matcher "\\\\tt\\>" nil nil))
+        (italic (ml/block-matcher "\\\\\\(?:em\\|it\\|sl\\)\\>" nil nil))
+        (bold (ml/block-matcher "\\\\bf\\(?:series\\)?\\>" nil nil))
+        (color (ml/block-matcher "\\\\color" nil 1)))
+    `((,tiny . 'ml/tiny)
+      (,script . 'ml/script)
+      (,footnote . 'ml/footnote)
+      (,small . 'ml/small)
+      (,large . 'ml/large)
+      (,llarge . 'ml/llarge)
+      (,xlarge . 'ml/xlarge)
+      (,huge . 'ml/huge)
+      (,hhuge . 'ml/hhuge)
+      (,type . 'ml/type)
+      (,italic . 'italic)
+      (,bold . 'bold)
+      (,color . (let ((col (match-string 2)))
+                  (cond ((string= col "black") 'ml/black)
+                        ((string= col "white") 'ml/white)
+                        ((string= col "red") 'ml/red)
+                        ((string= col "green") 'ml/green)
+                        ((string= col "blue") 'ml/blue)
+                        ((string= col "cyan") 'ml/cyan)
+                        ((string= col "magenta") 'ml/magenta)
+                        ((string= col "yellow") 'ml/yellow))))))
+  "The original (MATCHER . FACE) alist driving the reference highlighter.")
+
+(defun ml-test/reference-jit-block-highlighter (_ end)
+  "Run the original one-pass-per-command block highlighter to END."
+  (when magic-latex-enable-block-highlight
+    (ml-test/with-reference-search
+     (condition-case nil
+         (progn (ml/skip-blocks 1 nil t) (point))
+       (error (goto-char 1)))
+     (ml/remove-block-overlays (point) end)
+     (dolist (command ml-test/reference-block-commands)
+       (save-excursion
+         (while (funcall (car command) end)
+           (ml/make-block-overlay (match-beginning 0) (match-end 0)
+                                  (match-beginning 1) (match-end 1)
+                                  'face (eval (cdr command)))))))))
+
+(defun ml-test/block-snapshot (highlighter content)
+  "Run HIGHLIGHTER over CONTENT and capture block rendering semantics."
+  (with-temp-buffer
+    (insert content)
+    (setq buffer-file-name "magic-latex-block-parity.tex")
+    (latex-mode)
+    (font-lock-mode 1)
+    (magic-latex-buffer 1)
+    (font-lock-ensure)
+    (remove-overlays)
+    (let ((ml/jit-point (point-max))
+          (magic-latex-enable-block-align nil))
+      (set-syntax-table ml/syntax-table)
+      (goto-char (point-min))
+      (funcall highlighter (point-min) (point-max))
+      (list
+       (sort
+        (mapcar
+         (lambda (overlay)
+           (let ((partner (overlay-get overlay 'partner)))
+             (list
+              (overlay-start overlay)
+              (overlay-end overlay)
+              (buffer-substring-no-properties
+               (overlay-start overlay) (overlay-end overlay))
+              (overlay-start partner)
+              (overlay-end partner)
+              (format "%S" (overlay-get partner 'face)))))
+         (cl-remove-if-not
+          (lambda (overlay)
+            (eq (overlay-get overlay 'category) 'ml/ov-block))
+          (overlays-in (point-min) (point-max))))
+        (lambda (left right)
+          (or (< (car left) (car right))
+              (and (= (car left) (car right))
+                   (< (cadr left) (cadr right))))))
+       (cl-loop for position from (point-min) below (point-max)
+                collect (format "%S" (get-char-property position 'face)))))))
+
+(ert-deftest ml-test/block-highlighter-preserves-nesting-and-command-order ()
+  (let ((content
+         (concat
+          "{\\large outer {\\bfseries bold {\\color{blue} blue}} tail}\n"
+          "{\\small one \\large two \\bfseries three}\n"
+          "{\\tiny a} {\\scriptsize b} {\\footnotesize c} {\\small d} "
+          "{\\large e} {\\Large f} {\\LARGE g} {\\huge h} {\\Huge i} "
+          "{\\tt j} {\\em k} {\\it l} {\\sl m} {\\bf n} "
+          "{\\bfseries o} {\\color{black} p} {\\color{white} q} "
+          "{\\color{red} r} {\\color{green} s} {\\color{blue} t} "
+          "{\\color{cyan} u} {\\color{magenta} v} {\\color{yellow} w} "
+          "{\\color{purple} unsupported} {\\color{tiny} not-a-size} "
+          "% \\large ignored\n"
+          "{\\colorbox{red}{not-a-declaration}} {\\color missing-braces} "
+          "{\\large unterminated\n"
+          "\\\\large escaped\n")))
+    (should
+     (equal
+      (ml-test/block-snapshot
+       #'ml-test/reference-jit-block-highlighter content)
+      (ml-test/block-snapshot #'ml/jit-block-highlighter content)))))
+
+(ert-deftest ml-test/block-highlighter-matches-reference-on-generic-fixture ()
+  (let ((content (with-temp-buffer
+                   (insert-file-contents ml-test/fixture)
+                   (buffer-string))))
+    (should
+     (equal
+      (ml-test/block-snapshot
+       #'ml-test/reference-jit-block-highlighter content)
+      (ml-test/block-snapshot #'ml/jit-block-highlighter content)))))
+
 ;;; magic-latex-buffer-test.el ends here
