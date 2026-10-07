@@ -419,11 +419,17 @@
           ;; Commands that continue past a word boundary, and rules
           ;; that are not a plain negated command.
           "$\\not\\subset@x \\not\\in_1 \\not\\to1 "
-          "\\not\\le \\not \\geq \\not\\lhd//> \\not\\lhd "
-          "\\not\\bowtie \\not \\Join$\n")))
+          "\\not\\le \\not \\geq \\not\\bowtie \\not \\Join$\n")))
     (should
      (equal
       (ml-test/symbol-snapshot #'ml-test/reference-prettify-symbols content)
       (ml-test/symbol-snapshot #'ml/prettify-symbols content)))))
+
+(ert-deftest ml-test/lhd-is-prettified ()
+  (should
+   (equal '("\\lhd" "\\not\\lhd")
+          (mapcar #'caddr
+                  (ml-test/symbol-snapshot
+                   #'ml/prettify-symbols "$\\lhd \\not\\lhd$")))))
 
 ;;; magic-latex-buffer-test.el ends here
