@@ -57,3 +57,6 @@ You can disable some features independently, if they're too fancy.
 ** Known Issues
 
 - Not perfectly compatible with =multiple-cursors= (but still usable)
+
+** Useful link
+[[https://en.wikipedia.org/wiki/List_of_mathematical_symbols_by_subject][Wikipedia List of maths symbols]]
